@@ -89,7 +89,7 @@ func GetErrorCode(err error) int {
 func InitErrorCodeMap() {
 
 	ErrorCodeMap[database.InvalidID] = fiber.StatusBadRequest
-	ErrorCodeMap[common.ValidationError] = fiber.StatusBadRequest
+	ErrorCodeMap[common.ErrorValidation] = fiber.StatusBadRequest
 	ErrorCodeMap[common.ErrorInvalidType] = fiber.StatusBadRequest
 	ErrorCodeMap[common.ErrorNotFound] = fiber.StatusBadRequest
 

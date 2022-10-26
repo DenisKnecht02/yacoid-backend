@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strings"
 	"time"
 	"yacoid_server/common"
 
@@ -62,12 +63,42 @@ func (rejection *CreateAuthorRequest) Validate(validate *validator.Validate) []s
 	return common.ValidateStruct(rejection, validate)
 }
 
-type CreateSourceRequest struct {
-	Authors []string `bson:"authors" json:"authors" validate:"required,min=1"`
+type AuthorType string
+
+type authorTypeList struct {
+	Unknown      AuthorType
+	Person       AuthorType
+	Organization AuthorType
 }
 
-func (rejection *CreateSourceRequest) Validate(validate *validator.Validate) []string {
-	return common.ValidateStruct(rejection, validate)
+var EnumAuthorType = &authorTypeList{
+	Unknown:      "unknown",
+	Person:       "person",
+	Organization: "organization",
+}
+
+var authorTypeMap = map[string]AuthorType{
+	"person":       EnumAuthorType.Person,
+	"organization": EnumAuthorType.Organization,
+}
+
+func ParseStringToAuthorType(str string) (AuthorType, error) {
+	authorType, ok := authorTypeMap[strings.ToLower(str)]
+	if ok {
+		return authorType, nil
+	} else {
+		return authorType, common.ErrorInvalidEnum
+	}
+}
+
+func (authorType AuthorType) String() string {
+	switch authorType {
+	case EnumAuthorType.Person:
+		return "person"
+	case EnumAuthorType.Organization:
+		return "organization"
+	}
+	return "unknown"
 }
 
 type Author struct {
@@ -75,15 +106,129 @@ type Author struct {
 	SlugId        string             `bson:"slug_id" json:"slugId"`
 	SubmittedBy   primitive.ObjectID `bson:"submitted_by" json:"submittedBy"`
 	SubmittedDate time.Time          `bson:"submitted_date" json:"submittedDate"`
-	FirstName     string             `bson:"first_name" json:"firstName"`
-	LastName      string             `bson:"last_name" json:"lastName"`
+	Type          AuthorType         `bson:"type" json:"type"`
+}
+
+type PersonAuthor struct {
+	Author
+	FirstName string `bson:"first_name" json:"firstName"`
+	LastName  string `bson:"last_name" json:"lastName"`
+}
+
+type OrganizationAuthor struct {
+	Author
+	OrganizationName string `bson:"organization_name" json:"organizationName"`
+}
+
+type SourceType string
+
+type sourceTypeList struct {
+	Unknown SourceType
+	Book    SourceType
+	Journal SourceType
+	Web     SourceType
+}
+
+var EnumSourceType = &sourceTypeList{
+	Unknown: "unknown",
+	Book:    "book",
+	Journal: "journal",
+	Web:     "web",
+}
+
+var sourceTypeMap = map[string]SourceType{
+	"book":    EnumSourceType.Book,
+	"journal": EnumSourceType.Journal,
+	"web":     EnumSourceType.Web,
+}
+
+func ParseStringToSourceType(str string) (SourceType, error) {
+	sourceType, ok := sourceTypeMap[strings.ToLower(str)]
+	if ok {
+		return sourceType, nil
+	} else {
+		return sourceType, common.ErrorInvalidEnum
+	}
+}
+
+func (sourceType SourceType) String() string {
+	switch sourceType {
+	case EnumSourceType.Book:
+		return "book"
+	case EnumSourceType.Journal:
+		return "journal"
+	case EnumSourceType.Web:
+		return "web"
+	}
+	return "unknown"
 }
 
 type Source struct {
 	ID            primitive.ObjectID   `bson:"_id" json:"-"`
 	SubmittedBy   primitive.ObjectID   `bson:"submitted_by" json:"submittedBy"`
 	SubmittedDate time.Time            `bson:"submitted_date" json:"submittedDate"`
+	Type          SourceType           `bson:"type" json:"type"`
 	Authors       []primitive.ObjectID `bson:"authors" json:"authors" validate:"required,min=1"`
+	Title         string               `bson:"title" json:"title" validate:"required,min=1"`
+}
+
+type WebSourceProps struct {
+	URL             string    `bson:"url" json:"url"`
+	AccessDate      time.Time `bson:"access_date" json:"accessDate"`
+	PublicationDate time.Time `bson:"publication_date" json:"publicationDate"`
+}
+
+type BookSource struct {
+	Source
+	PublicationDate  time.Time      `bson:"publication_date" json:"publicationDate"`
+	PublicationPlace string         `bson:"publication_place" json:"publicationPlace"`
+	PagesFrom        int            `bson:"pages_from" json:"pagesFrom"`
+	PagesTo          int            `bson:"pages_to" json:"pagesTo"`
+	Edition          string         `bson:"edition" json:"edition"`
+	Publisher        string         `bson:"publisher" json:"publisher"`
+	ISBN             string         `bson:"isbn" json:"isbn"`
+	EAN              string         `bson:"ean" json:"ean"`
+	DOI              string         `bson:"doi" json:"doi"`
+	Web              WebSourceProps `bson:"web" json:"web"`
+}
+
+type JournalSource struct {
+	Source
+	PublicationDate  time.Time `bson:"publication_date" json:"publicationDate"`
+	PublicationPlace string    `bson:"publication_place" json:"publicationPlace"`
+	PagesFrom        int       `bson:"pages_from" json:"pagesFrom"`
+	PagesTo          int       `bson:"pages_to" json:"pagesTo"`
+	DOI              string    `bson:"doi" json:"doi"`
+	Edition          string    `bson:"edition" json:"edition"`
+	Publisher        string    `bson:"publisher" json:"publisher"`
+}
+
+type WebSource struct {
+	Source
+	WebSourceProps
+}
+
+// TODO: use interfaces to add Validate method to all of them?
+type CreateSourceRequest struct {
+	Type    SourceType `bson:"type" json:"type"`
+	Authors []string   `bson:"authors" json:"authors" validate:"required,min=1"`
+	Title   string     `bson:"title" json:"title" validate:"required,min=1"`
+}
+
+type CreateBookSourceRequest struct {
+	Type    SourceType `bson:"type" json:"type"`
+	Authors []string   `bson:"authors" json:"authors" validate:"required,min=1"`
+	Title   string     `bson:"title" json:"title" validate:"required,min=1"`
+}
+
+type CreateJournalSourceRequest struct {
+	Type    SourceType `bson:"type" json:"type"`
+	Authors []string   `bson:"authors" json:"authors" validate:"required,min=1"`
+	Title   string     `bson:"title" json:"title" validate:"required,min=1"`
+}
+
+func (rejection *CreateSourceRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(rejection, validate)
 }
 
 func (author *Source) Validate(validate *validator.Validate) []string {

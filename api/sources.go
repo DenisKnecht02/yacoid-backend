@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strings"
 	"yacoid_server/database"
 	"yacoid_server/types"
@@ -12,6 +13,14 @@ import (
 func AddSourcesRequests(sourceApi *fiber.Router, validate *validator.Validate) {
 
 	(*sourceApi).Post("/create", func(ctx *fiber.Ctx) error {
+
+		rawSourceType := ctx.Query("type")
+		sourceType, err := types.ParseStringToSourceType(rawSourceType)
+		fmt.Println("Source Type = " + sourceType.String())
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
 
 		request := new(types.CreateSourceRequest)
 
@@ -28,7 +37,7 @@ func AddSourcesRequests(sourceApi *fiber.Router, validate *validator.Validate) {
 		}
 
 		authToken := ctx.GetReqHeaders()["Authtoken"]
-		err := database.CreateSource(request, authToken)
+		err = database.CreateSource(request, authToken)
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}

@@ -7,9 +7,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var ValidationError = errors.New("INVALID_INPUT")
+var ErrorValidation = errors.New("INVALID_INPUT")
 var ErrorInvalidType = errors.New("INVALID_TYPE")
 var ErrorNotFound = errors.New("ENTITY_NOT_FOUND")
+var ErrorInvalidEnum = errors.New("INVALID_ENUM")
 
 func ValidateStruct(s interface{}, validate *validator.Validate) []string {
 

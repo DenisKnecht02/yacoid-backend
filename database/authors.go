@@ -27,8 +27,6 @@ func CreateAuthor(request *types.CreateAuthorRequest, authToken string) error {
 	author.SlugId = fmt.Sprintf("%s-%s-%08d", strings.ToLower(request.LastName), strings.ToLower(request.FirstName), rand.Intn(10000000))
 	author.SubmittedBy = user.ID
 	author.SubmittedDate = time.Now()
-	author.FirstName = request.FirstName
-	author.LastName = request.LastName
 
 	_, err := authorsCollection.InsertOne(dbContext, author)
 
