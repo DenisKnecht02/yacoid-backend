@@ -23,6 +23,8 @@ func CreateSource(request *types.CreateSourceRequest, authToken string) error {
 	source.ID = primitive.NewObjectID()
 	source.SubmittedBy = user.ID
 	source.SubmittedDate = time.Now()
+	source.Title = request.Title
+	source.Type = request.Type
 
 	authors, idError := stringsToObjectIDs(&request.Authors)
 
@@ -37,6 +39,7 @@ func CreateSource(request *types.CreateSourceRequest, authToken string) error {
 	}
 
 	source.Authors = authors
+	source.Properties = request.Properties
 
 	_, err := sourcesCollection.InsertOne(dbContext, source)
 

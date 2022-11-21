@@ -30,6 +30,26 @@ func ValidateStruct(s interface{}, validate *validator.Validate) []string {
 
 }
 
+func InterfaceArrayToStringArray(dataArray []interface{}) ([]string, bool) {
+
+	stringArray := []string{}
+
+	for _, data := range dataArray {
+
+		str, ok := data.(string)
+
+		if !ok {
+			return stringArray, false
+		}
+
+		stringArray = append(stringArray, str)
+
+	}
+
+	return stringArray, true
+
+}
+
 func LoadEnvironmentVariables() error {
 
 	err := godotenv.Load(".env")

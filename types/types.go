@@ -164,36 +164,39 @@ func (sourceType SourceType) String() string {
 }
 
 type Source struct {
-	ID            primitive.ObjectID   `bson:"_id" json:"-"`
-	SubmittedBy   primitive.ObjectID   `bson:"submitted_by" json:"submittedBy"`
-	SubmittedDate time.Time            `bson:"submitted_date" json:"submittedDate"`
-	Type          SourceType           `bson:"type" json:"type"`
-	Authors       []primitive.ObjectID `bson:"authors" json:"authors" validate:"required,min=1"`
-	Title         string               `bson:"title" json:"title" validate:"required,min=1"`
+	ID            primitive.ObjectID     `bson:"_id" json:"-"`
+	SubmittedBy   primitive.ObjectID     `bson:"submitted_by" json:"submittedBy"`
+	SubmittedDate time.Time              `bson:"submitted_date" json:"submittedDate"`
+	Type          SourceType             `bson:"type" json:"type"`
+	Authors       []primitive.ObjectID   `bson:"authors" json:"authors" validate:"required,min=1"`
+	Title         string                 `bson:"title" json:"title" validate:"required,min=1"`
+	Properties    map[string]interface{} `bson:"properties" json:"properties" validate:"required,min=1"`
 }
 
-type WebSourceProps struct {
+func (author *Source) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(author, validate)
+}
+
+type WebSourceProperties struct {
 	URL             string    `bson:"url" json:"url"`
 	AccessDate      time.Time `bson:"access_date" json:"accessDate"`
 	PublicationDate time.Time `bson:"publication_date" json:"publicationDate"`
 }
 
 type BookSource struct {
-	Source
-	PublicationDate  time.Time      `bson:"publication_date" json:"publicationDate"`
-	PublicationPlace string         `bson:"publication_place" json:"publicationPlace"`
-	PagesFrom        int            `bson:"pages_from" json:"pagesFrom"`
-	PagesTo          int            `bson:"pages_to" json:"pagesTo"`
-	Edition          string         `bson:"edition" json:"edition"`
-	Publisher        string         `bson:"publisher" json:"publisher"`
-	ISBN             string         `bson:"isbn" json:"isbn"`
-	EAN              string         `bson:"ean" json:"ean"`
-	DOI              string         `bson:"doi" json:"doi"`
-	Web              WebSourceProps `bson:"web" json:"web"`
+	PublicationDate  time.Time           `bson:"publication_date" json:"publicationDate"`
+	PublicationPlace string              `bson:"publication_place" json:"publicationPlace"`
+	PagesFrom        int                 `bson:"pages_from" json:"pagesFrom"`
+	PagesTo          int                 `bson:"pages_to" json:"pagesTo"`
+	Edition          string              `bson:"edition" json:"edition"`
+	Publisher        string              `bson:"publisher" json:"publisher"`
+	ISBN             string              `bson:"isbn" json:"isbn"`
+	EAN              string              `bson:"ean" json:"ean"`
+	DOI              string              `bson:"doi" json:"doi"`
+	Web              WebSourceProperties `bson:"web" json:"web"`
 }
 
 type JournalSource struct {
-	Source
 	PublicationDate  time.Time `bson:"publication_date" json:"publicationDate"`
 	PublicationPlace string    `bson:"publication_place" json:"publicationPlace"`
 	PagesFrom        int       `bson:"pages_from" json:"pagesFrom"`
@@ -204,15 +207,15 @@ type JournalSource struct {
 }
 
 type WebSource struct {
-	Source
-	WebSourceProps
+	WebSourceProperties
 }
 
 // TODO: use interfaces to add Validate method to all of them?
 type CreateSourceRequest struct {
-	Type    SourceType `bson:"type" json:"type"`
-	Authors []string   `bson:"authors" json:"authors" validate:"required,min=1"`
-	Title   string     `bson:"title" json:"title" validate:"required,min=1"`
+	Type       SourceType             `bson:"type" json:"type"`
+	Authors    []string               `bson:"authors" json:"authors" validate:"required,min=1"`
+	Title      string                 `bson:"title" json:"title" validate:"required,min=1"`
+	Properties map[string]interface{} `bson:"properties" json:"properties" validate:"required"`
 }
 
 type CreateBookSourceRequest struct {
@@ -229,10 +232,6 @@ type CreateJournalSourceRequest struct {
 
 func (rejection *CreateSourceRequest) Validate(validate *validator.Validate) []string {
 	return common.ValidateStruct(rejection, validate)
-}
-
-func (author *Source) Validate(validate *validator.Validate) []string {
-	return common.ValidateStruct(author, validate)
 }
 
 type DefinitionFilter struct {
