@@ -40,6 +40,9 @@ func StartAPI() {
 	userApi := api.Group("/user")
 	AddAuthRequests(&userApi, validate)
 
+	commonApi := api.Group("/common")
+	AddCommonRequests(&commonApi, validate)
+
 	fmt.Println("Started server on port " + os.Getenv(constants.EnvKeyRestPort))
 
 	app.Listen(":" + os.Getenv(constants.EnvKeyRestPort))

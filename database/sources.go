@@ -120,3 +120,25 @@ func GetSource(id primitive.ObjectID) (*types.Source, error) {
 	return &source, nil
 
 }
+
+func GetSourceCount() (int64, error) {
+
+	count, err := sourcesCollection.CountDocuments(dbContext, bson.M{}, nil)
+	return count, err
+
+}
+
+func GetSourceCountInCurrentQuarter() (int64, error) {
+
+	currentQuarterDate := common.GetCurrentQuarterDate()
+
+	filter := bson.M{
+		"submitted_date": bson.M{
+			"$gte": currentQuarterDate,
+		},
+	}
+
+	count, err := sourcesCollection.CountDocuments(dbContext, filter, nil)
+	return count, err
+
+}

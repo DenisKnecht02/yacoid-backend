@@ -361,6 +361,32 @@ func CreateFilterQuery(filter *types.DefinitionFilter) bson.D {
 
 }
 
+func GetDefinitionCount() (int64, error) {
+
+	filter := bson.M{
+		"approved": true,
+	}
+	count, err := definitionsCollection.CountDocuments(dbContext, filter, nil)
+	return count, err
+
+}
+
+func GetDefinitionCountInCurrentQuarter() (int64, error) {
+
+	currentQuarterDate := common.GetCurrentQuarterDate()
+
+	filter := bson.M{
+		"approved": true,
+		"approved_date": bson.M{
+			"$gte": currentQuarterDate,
+		},
+	}
+
+	count, err := definitionsCollection.CountDocuments(dbContext, filter, nil)
+	return count, err
+
+}
+
 func GetPageCount(pageSize int, filter interface{}) (int64, error) {
 
 	count, err := definitionsCollection.CountDocuments(dbContext, filter, nil)

@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -47,6 +48,26 @@ func InterfaceArrayToStringArray(dataArray []interface{}) ([]string, bool) {
 	}
 
 	return stringArray, true
+
+}
+
+func GetCurrentQuarterDate() time.Time {
+
+	now := time.Now()
+
+	var quarterTime time.Time
+
+	if now.Month() <= 3 {
+		quarterTime = time.Date(now.Year(), time.January, 1, 0, 0, 0, 0, now.Location())
+	} else if now.Month() <= 6 {
+		quarterTime = time.Date(now.Year(), time.April, 1, 0, 0, 0, 0, now.Location())
+	} else if now.Month() <= 6 {
+		quarterTime = time.Date(now.Year(), time.July, 1, 0, 0, 0, 0, now.Location())
+	} else {
+		quarterTime = time.Date(now.Year(), time.October, 1, 0, 0, 0, 0, now.Location())
+	}
+
+	return quarterTime
 
 }
 

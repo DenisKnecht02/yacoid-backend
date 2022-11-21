@@ -242,3 +242,12 @@ type DefinitionFilter struct {
 	Sources         *[]*Source   `json:"sources" bson:"sources" validate:"omitempty,min=1,dive"`
 	Tags            *[]string    `json:"tags" bson:"tags" validate:"omitempty,min=1"`
 }
+
+type StatisticsResponse struct {
+	DefinitionCount                 int `json:"definitionCount"`
+	DefinitionCountInCurrentQuarter int `json:"definitionCountInCurrentQuarter"`
+	SourceCount                     int `json:"sourceCount"`
+	SourceCountInCurrentQuarter     int `json:"sourceCountInCurrentQuarter"`
+	AuthorCount                     int `json:"authorCount"`
+	AuthorCountInCurrentQuarter     int `json:"authorCountInCurrentQuarter"`
+}
