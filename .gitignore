@@ -1,2 +1,8 @@
+# Ignore
+
 tmp/
-.env
+.env*
+
+# Allow
+
+!.env*.sample

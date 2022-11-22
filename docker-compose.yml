@@ -1,0 +1,30 @@
+version: '3.9'
+services:
+  database:
+    image: mongo:latest
+    container_name: yacoid-mongodb-container
+    #volumes:
+    #  - ./docker/mongo-volume:/data/db
+    #  - ./docker/entrypoint:/docker-entrypoint-initdb.d
+    #env_file:
+    #  - ./.env.database
+    ports:
+      - '27020-27022:27017-27019'
+    networks:
+      - yacoid-backend-network
+  authorizer:
+    image: lakhansamani/authorizer:latest
+    container_name: yacoid-auth-container
+    env_file:
+      - ./.env.auth
+    depends_on:
+      - database
+    ports:
+      - 8080:8080
+    networks:
+      - yacoid-backend-network
+
+networks:
+  yacoid-backend-network:
+    external: true
+    name: yacoid-backend-network
