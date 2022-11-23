@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
+	"yacoid_server/auth"
 	"yacoid_server/common"
 	"yacoid_server/constants"
 	"yacoid_server/database"
 
+	"github.com/authorizerdev/authorizer-go"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -34,12 +37,6 @@ func StartAPI() {
 	sourceApi := api.Group("/sources")
 	AddSourcesRequests(&sourceApi, validate)
 
-	authApi := api.Group("/auth")
-	AddAuthRequests(&authApi, validate)
-
-	userApi := api.Group("/user")
-	AddAuthRequests(&userApi, validate)
-
 	commonApi := api.Group("/common")
 	AddCommonRequests(&commonApi, validate)
 
@@ -64,6 +61,37 @@ func GetOptionalIntParam(stringValue string, defaultValue int) int {
 
 	}
 
+}
+
+// TODO: middleware with roles
+
+func AuthMiddleware() func(ctx *fiber.Ctx) error {
+	return func(ctx *fiber.Ctx) error {
+
+		authHeader := ctx.GetReqHeaders()["Authorization"]
+		tokenSplit := strings.Split(authHeader, " ")
+
+		if len(tokenSplit) < 2 || tokenSplit[1] == "" {
+			return ctx.Status(GetErrorCode(fiber.ErrUnauthorized)).JSON(Response{Error: fiber.ErrUnauthorized.Error()})
+		}
+
+		response, err := auth.AuthClient.ValidateJWTToken(&authorizer.ValidateJWTTokenInput{
+			TokenType: authorizer.TokenTypeIDToken,
+			Token:     tokenSplit[1],
+		})
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		if !response.IsValid {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		fmt.Println(response)
+
+		return ctx.Next()
+	}
 }
 
 type Response struct {
@@ -98,10 +126,6 @@ func InitErrorCodeMap() {
 
 	ErrorCodeMap[database.ErrorUserNotFound] = fiber.StatusNotFound
 	ErrorCodeMap[database.ErrorNotEnoughPermissions] = fiber.StatusUnauthorized
-	ErrorCodeMap[database.ErrorInvalidCredentials] = fiber.StatusUnauthorized
-	ErrorCodeMap[database.ErrorPasswordResetExpiryDateExceeded] = fiber.StatusBadRequest
-	ErrorCodeMap[database.ErrorUserAlreadyExists] = fiber.StatusBadRequest
-	ErrorCodeMap[database.ErrorUserAlreadyLoggedIn] = fiber.StatusBadRequest
 	ErrorCodeMap[ErrorEmailVerification] = fiber.StatusBadRequest
 	ErrorCodeMap[ErrorChangePassword] = fiber.StatusBadRequest
 
@@ -109,5 +133,6 @@ func InitErrorCodeMap() {
 	ErrorCodeMap[database.ErrorDefinitionAlreadyApproved] = fiber.StatusBadRequest
 	ErrorCodeMap[database.ErrorDefinitionRejectionBelongsToAnotherUser] = fiber.StatusUnauthorized
 	ErrorCodeMap[database.ErrorDefinitionRejectionNotAnsweredYet] = fiber.StatusBadRequest
+	ErrorCodeMap[fiber.ErrUnauthorized] = fiber.StatusUnauthorized
 
 }

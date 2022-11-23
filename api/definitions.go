@@ -3,6 +3,8 @@ package api
 import (
 	"fmt"
 	"strings"
+	"yacoid_server/auth"
+	"yacoid_server/constants"
 	"yacoid_server/database"
 	"yacoid_server/types"
 
@@ -29,7 +31,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 
 	})
 
-	(*definitionApi).Post("/submit", func(ctx *fiber.Ctx) error {
+	(*definitionApi).Post("/submit", AuthMiddleware(), func(ctx *fiber.Ctx) error {
 
 		request := new(types.SubmitDefinitionRequest)
 
@@ -45,8 +47,17 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
-		authToken := ctx.GetReqHeaders()["Authtoken"]
-		definition, err := database.SubmitDefinition(request, authToken)
+		idToken, err := auth.GetIdTokenAndExpectRoleFromContext(ctx, constants.RoleUser)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		if err := ctx.BodyParser(request); err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		definition, err := database.SubmitDefinition(request, idToken)
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}

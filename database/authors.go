@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+	"yacoid_server/auth"
 	"yacoid_server/common"
 	"yacoid_server/types"
 
@@ -13,9 +14,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func CreateAuthor(request *types.CreateAuthorRequest, authToken string) error {
+func CreateAuthor(request *types.CreateAuthorRequest, token string) error {
 
-	user, userError := GetUserByAuthToken(authToken)
+	user, userError := auth.GetUserByToken(token)
 
 	if userError != nil {
 		return userError

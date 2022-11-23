@@ -12,6 +12,9 @@ var ErrorValidation = errors.New("INVALID_INPUT")
 var ErrorInvalidType = errors.New("INVALID_TYPE")
 var ErrorNotFound = errors.New("ENTITY_NOT_FOUND")
 var ErrorInvalidEnum = errors.New("INVALID_ENUM")
+var ErrorUnexpectedSigningMethod = errors.New("UNEXPECTED_SIGNING_METHOD")
+var ErrorMissingRole = errors.New("MISSING_ROLE")
+var ErrorValidationResponseInvalid = errors.New("VALIDATION_RESPONSE_INVALID")
 
 func ValidateStruct(s interface{}, validate *validator.Validate) []string {
 

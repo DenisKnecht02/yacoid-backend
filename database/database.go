@@ -34,7 +34,7 @@ func Connect() error {
 	fmt.Println("Connecting to database...")
 
 	dbContext = context.TODO()
-	databaseURL := os.Getenv(constants.EnvKeyMongoDBUrl)
+	databaseURL := os.Getenv(constants.EnvKeyDatabaseUrl)
 
 	options := options.Client().ApplyURI(databaseURL)
 

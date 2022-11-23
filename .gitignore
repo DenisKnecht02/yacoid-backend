@@ -2,6 +2,7 @@
 
 tmp/
 .env*
+jwtConfig.json
 
 # Allow
 

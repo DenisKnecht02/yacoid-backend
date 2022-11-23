@@ -104,7 +104,7 @@ func (authorType AuthorType) String() string {
 type Author struct {
 	ID            primitive.ObjectID `bson:"_id" json:"-"`
 	SlugId        string             `bson:"slug_id" json:"slugId"`
-	SubmittedBy   primitive.ObjectID `bson:"submitted_by" json:"submittedBy"`
+	SubmittedBy   string             `bson:"submitted_by" json:"submittedBy"`
 	SubmittedDate time.Time          `bson:"submitted_date" json:"submittedDate"`
 	Type          AuthorType         `bson:"type" json:"type"`
 }
@@ -165,7 +165,7 @@ func (sourceType SourceType) String() string {
 
 type Source struct {
 	ID            primitive.ObjectID     `bson:"_id" json:"-"`
-	SubmittedBy   primitive.ObjectID     `bson:"submitted_by" json:"submittedBy"`
+	SubmittedBy   string                 `bson:"submitted_by" json:"submittedBy"`
 	SubmittedDate time.Time              `bson:"submitted_date" json:"submittedDate"`
 	Type          SourceType             `bson:"type" json:"type"`
 	Authors       []primitive.ObjectID   `bson:"authors" json:"authors" validate:"required,min=1"`
