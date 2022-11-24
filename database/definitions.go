@@ -6,7 +6,6 @@ import (
 	"math"
 	"time"
 
-	"yacoid_server/auth"
 	"yacoid_server/common"
 	"yacoid_server/types"
 
@@ -47,19 +46,13 @@ func (definition *Definition) IsApproved() bool {
 	return definition.ApprovedBy != nil && definition.ApprovedDate != nil
 }
 
-func SubmitDefinition(request *types.SubmitDefinitionRequest, token string) (*Definition, error) {
-
-	user, userError := auth.GetUserByToken(token)
-
-	if userError != nil {
-		return nil, userError
-	}
+func SubmitDefinition(request *types.SubmitDefinitionRequest, userId string) (*Definition, error) {
 
 	var definition Definition
 
 	now := time.Now()
 	definition.ID = primitive.NewObjectID()
-	definition.SubmittedBy = user.ID
+	definition.SubmittedBy = userId
 	definition.SubmittedDate = now
 	definition.LastSubmitChangeDate = now
 	definition.ApprovedBy = nil
@@ -110,7 +103,7 @@ func validateSourceExists(id primitive.ObjectID) error {
 
 }
 
-func ApproveDefinition(definitionId string, token string) error {
+func ApproveDefinition(definitionId string, userId string) error {
 
 	definitionObjectId, definitionObjectIdError := primitive.ObjectIDFromHex(definitionId)
 
@@ -118,16 +111,10 @@ func ApproveDefinition(definitionId string, token string) error {
 		return InvalidID
 	}
 
-	user, userError := auth.GetUserByToken(token)
-
-	if userError != nil {
-		return userError
-	}
-
 	filter := bson.M{"_id": definitionObjectId}
 	update := bson.M{
 		"$set": bson.M{
-			"approved_by":   user.ID,
+			"approved_by":   userId,
 			"approved_date": time.Now(),
 			"approved":      true,
 		},
@@ -148,18 +135,12 @@ func ApproveDefinition(definitionId string, token string) error {
 
 }
 
-func RejectDefinition(definitionId string, token string, content string) error {
+func RejectDefinition(definitionId string, content string, userId string) error {
 
 	definitionObjectId, definitionObjectIdError := primitive.ObjectIDFromHex(definitionId)
 
 	if definitionObjectIdError != nil {
 		return InvalidID
-	}
-
-	user, userError := auth.GetUserByToken(token)
-
-	if userError != nil {
-		return userError
 	}
 
 	definition, findError := GetDefinitionByObjectId(definitionObjectId)
@@ -174,7 +155,7 @@ func RejectDefinition(definitionId string, token string, content string) error {
 
 	rejection := Rejection{
 		ID:           primitive.NewObjectID(),
-		RejectedBy:   user.ID,
+		RejectedBy:   userId,
 		RejectedDate: time.Now(),
 		Content:      content,
 	}
@@ -212,18 +193,12 @@ func RejectDefinition(definitionId string, token string, content string) error {
 
 }
 
-func ChangeDefinition(id string, title *string, content *string, source *types.Source, tags *[]string, token string) error {
+func ChangeDefinition(definitionId string, title *string, content *string, source *types.Source, tags *[]string, userId string) error {
 
-	definitionObjectId, definitionObjectIdError := primitive.ObjectIDFromHex(id)
+	definitionObjectId, definitionObjectIdError := primitive.ObjectIDFromHex(definitionId)
 
 	if definitionObjectIdError != nil {
 		return InvalidID
-	}
-
-	user, userError := auth.GetUserByToken(token)
-
-	if userError != nil {
-		return userError
 	}
 
 	definition, findError := GetDefinitionByObjectId(definitionObjectId)
@@ -236,7 +211,7 @@ func ChangeDefinition(id string, title *string, content *string, source *types.S
 		return ErrorDefinitionAlreadyApproved
 	}
 
-	if definition.SubmittedBy != user.ID {
+	if definition.SubmittedBy != userId {
 		return ErrorDefinitionRejectionBelongsToAnotherUser
 	}
 

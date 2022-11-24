@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"yacoid_server/common"
@@ -11,7 +9,6 @@ import (
 
 	"github.com/authorizerdev/authorizer-go"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
 )
 
 var AuthClient *authorizer.AuthorizerClient
@@ -47,43 +44,28 @@ func GetUserByToken(token string) (*authorizer.User, error) {
 
 }
 
-// Can be the id or access token
-func GetAuthorizationToken(ctx *fiber.Ctx) (string, error) {
+func SplitAuthorizationHeader(header string) (string, bool) {
 
-	authorizationHeader := ctx.GetReqHeaders()["Authorization"]
-	tokenSplit := strings.Split(authorizationHeader, "Bearer ")
-
-	if len(tokenSplit) < 2 || tokenSplit[1] == "" {
-		return "", fiber.ErrUnauthorized
+	split := strings.Split(header, " ")
+	if len(split) == 2 && strings.ToLower(split[0]) == "bearer" && len(split[1]) > 0 {
+		return split[1], true
 	}
 
-	return tokenSplit[1], nil
+	return "", false
 
 }
 
-func GetIdTokenAndExpectRoleFromContext(ctx *fiber.Ctx, role constants.Role) (string, error) {
+// Can be the id or access token
+func GetAuthorizationToken(ctx *fiber.Ctx) (string, error) {
 
-	idToken, err := GetAuthorizationToken(ctx)
+	authHeader := ctx.GetReqHeaders()["Authorization"]
 
-	if err != nil {
-		return "", err
+	token, ok := SplitAuthorizationHeader(authHeader)
+	if !ok {
+		return "", fiber.ErrUnauthorized
 	}
 
-	response, err := AuthClient.ValidateJWTToken(&authorizer.ValidateJWTTokenInput{
-		TokenType: authorizer.TokenTypeIDToken,
-		Token:     idToken,
-		Roles:     []*string{role.StringAddress()},
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	if !response.IsValid {
-		return "", common.ErrorValidationResponseInvalid
-	}
-
-	return idToken, common.ErrorMissingRole
+	return token, nil
 
 }
 
@@ -96,62 +78,49 @@ func GetUserByContext(ctx *fiber.Ctx) (*authorizer.User, error) {
 	}
 
 	return GetUserByToken(token)
+
 }
 
-func DecodeJWTToken(bearer string) (*jwt.Token, *jwt.MapClaims, error) {
+func Authenticate(ctx *fiber.Ctx, roles ...constants.Role) (map[string]interface{}, error) {
 
-	tokenString := strings.Split(bearer, "Bearer ")[1]
+	token, err := GetAuthorizationToken(ctx)
 
-	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, common.ErrorUnexpectedSigningMethod
-		}
+	if err != nil {
+		return nil, err
+	}
 
-		key, err := GetPublicKey()
-		fmt.Println(key)
-
-		if err != nil {
-			return nil, err
-		}
-
-		return key, nil
+	response, err := AuthClient.ValidateJWTToken(&authorizer.ValidateJWTTokenInput{
+		TokenType: authorizer.TokenTypeIDToken,
+		Token:     token,
+		Roles:     constants.RoleArrayToStringAdressArray(roles),
 	})
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return token, &claims, nil
+	if !response.IsValid {
+		return nil, common.ErrorValidation
+	}
+
+	return response.Claims, nil
 
 }
 
-func DecodeJWTTokenWithContext(ctx *fiber.Ctx) (*jwt.Token, *jwt.MapClaims, error) {
-	return DecodeJWTToken(ctx.GetReqHeaders()["Authorization"])
-}
+func AuthenticateAndGetId(ctx *fiber.Ctx, roles ...constants.Role) (string, error) {
 
-type JWTConfig struct {
-	Type string `json:"type"`
-	Key  string `json:"key"`
-}
-
-func GetPublicKey() ([]byte, error) {
-
-	content, err := ioutil.ReadFile("jwtConfig.json")
-	key := []byte{}
+	claims, err := Authenticate(ctx, roles...)
 
 	if err != nil {
-		return key, err
+		return "", err
 	}
 
-	var config JWTConfig
-	err = json.Unmarshal(content, &config)
+	id, ok := claims["id"].(string)
 
-	if err != nil {
-		return key, err
+	if !ok {
+		return "", common.ErrorUserIdCast
 	}
 
-	key = []byte(config.Key)
-	return key, nil
+	return id, nil
 
 }

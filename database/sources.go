@@ -2,7 +2,6 @@ package database
 
 import (
 	"time"
-	"yacoid_server/auth"
 	"yacoid_server/common"
 	"yacoid_server/types"
 
@@ -11,18 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func CreateSource(request *types.CreateSourceRequest, token string) error {
-
-	user, userError := auth.GetUserByToken(token)
-
-	if userError != nil {
-		return userError
-	}
+func CreateSource(request *types.CreateSourceRequest, userId string) error {
 
 	var source types.Source
 
 	source.ID = primitive.NewObjectID()
-	source.SubmittedBy = user.ID
+	source.SubmittedBy = userId
 	source.SubmittedDate = time.Now()
 	source.Title = request.Title
 	source.Type = request.Type

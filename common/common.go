@@ -8,9 +8,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var ErrorUserIdCast = errors.New("FAILED_USER_ID_CAST")
 var ErrorValidation = errors.New("INVALID_INPUT")
 var ErrorInvalidType = errors.New("INVALID_TYPE")
 var ErrorNotFound = errors.New("ENTITY_NOT_FOUND")
+var ErrorAuthorNotFound = errors.New("AUTHOR_NOT_FOUND")
 var ErrorInvalidEnum = errors.New("INVALID_ENUM")
 var ErrorUnexpectedSigningMethod = errors.New("UNEXPECTED_SIGNING_METHOD")
 var ErrorMissingRole = errors.New("MISSING_ROLE")

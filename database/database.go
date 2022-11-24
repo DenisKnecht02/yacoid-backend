@@ -1,7 +1,6 @@
 package database
 
 import (
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"os"
@@ -19,7 +18,6 @@ var client *mongo.Client
 var database *mongo.Database
 
 var definitionsCollection *mongo.Collection
-var userCollection *mongo.Collection
 var authorsCollection *mongo.Collection
 var sourcesCollection *mongo.Collection
 
@@ -63,25 +61,10 @@ func Connect() error {
 		Keys: bson.D{{Key: "title", Value: "text"}, {Key: "content", Value: "text"}},
 	})
 
-	database.CreateCollection(dbContext, "user")
-	userCollection = database.Collection("user")
-
 	authorsCollection = database.Collection("authors")
 	sourcesCollection = database.Collection("sources")
 
 	return nil
-}
-
-func hash(seed string) string {
-	data := []byte(seed)
-	return fmt.Sprintf("%x", sha256.Sum256(data))
-}
-
-func seededUUID(seed string) string {
-	data := []byte(seed)
-	tempHash := fmt.Sprintf("%x", sha256.Sum256(data))[:32]
-	hash := tempHash[0:8] + "-" + tempHash[8:12] + "-" + tempHash[12:16] + "-" + tempHash[16:20] + "-" + tempHash[20:32]
-	return hash
 }
 
 type UpdateEntry struct {

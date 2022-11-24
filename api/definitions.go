@@ -31,7 +31,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 
 	})
 
-	(*definitionApi).Post("/submit", AuthMiddleware(), func(ctx *fiber.Ctx) error {
+	(*definitionApi).Post("/submit", func(ctx *fiber.Ctx) error {
 
 		request := new(types.SubmitDefinitionRequest)
 
@@ -47,17 +47,17 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
-		idToken, err := auth.GetIdTokenAndExpectRoleFromContext(ctx, constants.RoleUser)
-
-		if err != nil {
-			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-		}
-
 		if err := ctx.BodyParser(request); err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
-		definition, err := database.SubmitDefinition(request, idToken)
+		id, err := auth.AuthenticateAndGetId(ctx)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+		}
+
+		definition, err := database.SubmitDefinition(request, id)
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
@@ -71,8 +71,13 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 
 		definitionId := ctx.Params("id")
 
-		authToken := ctx.GetReqHeaders()["Authtoken"]
-		err := database.ApproveDefinition(definitionId, authToken)
+		id, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+		}
+
+		err = database.ApproveDefinition(definitionId, id)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
@@ -100,8 +105,13 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
-		authToken := ctx.GetReqHeaders()["Authtoken"]
-		err := database.RejectDefinition(request.ID, authToken, request.Content)
+		id, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+		}
+
+		err = database.RejectDefinition(request.ID, request.Content, id)
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(Response{Error: err.Error()})
 		}
@@ -127,8 +137,13 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
-		authToken := ctx.GetReqHeaders()["Authtoken"]
-		err := database.ChangeDefinition(request.ID, request.Title, request.Content, request.Source, request.Tags, authToken)
+		id, err := auth.AuthenticateAndGetId(ctx)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+		}
+
+		err = database.ChangeDefinition(request.ID, request.Title, request.Content, request.Source, request.Tags, id)
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}

@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"yacoid_server/auth"
 	"yacoid_server/common"
 	"yacoid_server/constants"
 	"yacoid_server/database"
 
-	"github.com/authorizerdev/authorizer-go"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -25,19 +23,20 @@ func StartAPI() {
 	app := fiber.New()
 
 	api := app.Group("/api")
+	v1 := api.Group("/v1")
 
 	validate := validator.New()
 
-	definitionApi := api.Group("/definitions")
+	definitionApi := v1.Group("/definitions")
 	AddDefinitionRequests(&definitionApi, validate)
 
-	authorApi := api.Group("/authors")
+	authorApi := v1.Group("/authors")
 	AddAuthorsRequests(&authorApi, validate)
 
-	sourceApi := api.Group("/sources")
+	sourceApi := v1.Group("/sources")
 	AddSourcesRequests(&sourceApi, validate)
 
-	commonApi := api.Group("/common")
+	commonApi := v1.Group("/common")
 	AddCommonRequests(&commonApi, validate)
 
 	fmt.Println("Started server on port " + os.Getenv(constants.EnvKeyRestPort))
@@ -63,34 +62,17 @@ func GetOptionalIntParam(stringValue string, defaultValue int) int {
 
 }
 
-// TODO: middleware with roles
-
-func AuthMiddleware() func(ctx *fiber.Ctx) error {
+func AuthMiddleware(roles ...constants.Role) func(ctx *fiber.Ctx) error {
 	return func(ctx *fiber.Ctx) error {
 
-		authHeader := ctx.GetReqHeaders()["Authorization"]
-		tokenSplit := strings.Split(authHeader, " ")
-
-		if len(tokenSplit) < 2 || tokenSplit[1] == "" {
-			return ctx.Status(GetErrorCode(fiber.ErrUnauthorized)).JSON(Response{Error: fiber.ErrUnauthorized.Error()})
-		}
-
-		response, err := auth.AuthClient.ValidateJWTToken(&authorizer.ValidateJWTTokenInput{
-			TokenType: authorizer.TokenTypeIDToken,
-			Token:     tokenSplit[1],
-		})
+		_, err := auth.Authenticate(ctx, roles...)
 
 		if err != nil {
-			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+			return err
 		}
-
-		if !response.IsValid {
-			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-		}
-
-		fmt.Println(response)
 
 		return ctx.Next()
+
 	}
 }
 
@@ -125,6 +107,7 @@ func InitErrorCodeMap() {
 	ErrorCodeMap[common.ErrorNotFound] = fiber.StatusBadRequest
 
 	ErrorCodeMap[database.ErrorUserNotFound] = fiber.StatusNotFound
+	ErrorCodeMap[common.ErrorAuthorNotFound] = fiber.StatusBadRequest
 	ErrorCodeMap[database.ErrorNotEnoughPermissions] = fiber.StatusUnauthorized
 	ErrorCodeMap[ErrorEmailVerification] = fiber.StatusBadRequest
 	ErrorCodeMap[ErrorChangePassword] = fiber.StatusBadRequest

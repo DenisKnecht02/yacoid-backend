@@ -2,6 +2,7 @@ package api
 
 import (
 	"strings"
+	"yacoid_server/auth"
 	"yacoid_server/database"
 	"yacoid_server/types"
 
@@ -27,8 +28,14 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
-		authToken := ctx.GetReqHeaders()["Authtoken"]
-		err := database.CreateAuthor(request, authToken)
+		id, err := auth.AuthenticateAndGetId(ctx)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+		}
+
+		err = database.CreateAuthor(request, id)
+
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}

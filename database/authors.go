@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"strings"
 	"time"
-	"yacoid_server/auth"
 	"yacoid_server/common"
 	"yacoid_server/types"
 
@@ -14,19 +13,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func CreateAuthor(request *types.CreateAuthorRequest, token string) error {
-
-	user, userError := auth.GetUserByToken(token)
-
-	if userError != nil {
-		return userError
-	}
+func CreateAuthor(request *types.CreateAuthorRequest, userId string) error {
 
 	var author types.Author
 
 	author.ID = primitive.NewObjectID()
 	author.SlugId = fmt.Sprintf("%s-%s-%08d", strings.ToLower(request.LastName), strings.ToLower(request.FirstName), rand.Intn(10000000))
-	author.SubmittedBy = user.ID
+	author.SubmittedBy = userId
 	author.SubmittedDate = time.Now()
 
 	_, err := authorsCollection.InsertOne(dbContext, author)
@@ -59,7 +52,7 @@ func GetAuthor(id primitive.ObjectID) (*types.Author, error) {
 
 	if result.Err() != nil {
 		if result.Err() == mongo.ErrNoDocuments {
-			return nil, common.ErrorNotFound
+			return nil, common.ErrorAuthorNotFound
 		}
 		return nil, result.Err()
 	}
