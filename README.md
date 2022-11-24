@@ -15,7 +15,8 @@ PROTECTED_ROLES=moderator,admin
 
 3. Go into the scripts folder and execute the `start_authorizer.bat` file (docker must be running)
 4. The Authorizer Dashboard is now available under <http://localhost:8080/>
-5. The Authorizer Instance should now be successfully configured
+5. When logging in for the first time, you can choose an arbitrary password
+6. The Authorizer Instance should now be successfully configured and can be accessed
 
 <br/>
 <br/>
