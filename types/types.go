@@ -9,6 +9,33 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type AuthorPageCountRequest struct {
+	PageSize int           `json:"pageSize" validate:"required,min=1"`
+	Filter   *AuthorFilter `json:"filter" validate:"omitempty,dive"`
+}
+
+func (request *AuthorPageCountRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
+}
+
+type AuthorPageRequest struct {
+	PageSize int           `json:"pageSize" validate:"required,min=1"`
+	Page     int           `json:"page" validate:"required,min=1"`
+	Filter   *AuthorFilter `json:"filter" validate:"omitempty,dive"`
+	Sort     *interface{}  `json:"sort"`
+}
+
+func (request *AuthorPageRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
+}
+
+type AuthorFilter struct {
+	FirstName        *string `json:"firstName" validate:"omitempty,min=1"`
+	LastName         *string `json:"lastName" validate:"omitempty,min=1"`
+	OrganizationName *string `json:"organizationName" validate:"omitempty,min=1"`
+	Type             *string `json:"type" validate:"omitempty,min=1"`
+}
+
 type SubmitDefinitionRequest struct {
 	Title          string    `json:"title" validate:"required,min=1"`
 	Content        string    `json:"content" validate:"required,min=1"`
@@ -17,19 +44,28 @@ type SubmitDefinitionRequest struct {
 	Tags           *[]string `json:"tags" validate:"required,min=1"`
 }
 
-func (author *SubmitDefinitionRequest) Validate(validate *validator.Validate) []string {
-	return common.ValidateStruct(author, validate)
+func (request *SubmitDefinitionRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
+}
+
+type DefinitionPageCountRequest struct {
+	PageSize int               `json:"pageSize" validate:"required,min=1"`
+	Filter   *DefinitionFilter `json:"filter" validate:"omitempty,dive"`
+}
+
+func (request *DefinitionPageCountRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
 }
 
 type DefinitionPageRequest struct {
-	PageSize int               `json:"pageSize" validate:"required"`
+	PageSize int               `json:"pageSize" validate:"required,min=1"`
 	Page     int               `json:"page" validate:"required,min=1"`
 	Filter   *DefinitionFilter `json:"filter" validate:"omitempty,dive"`
 	Sort     *interface{}      `json:"sort"`
 }
 
-func (DefinitionPageRequest *DefinitionPageRequest) Validate(validate *validator.Validate) []string {
-	return common.ValidateStruct(DefinitionPageRequest, validate)
+func (request *DefinitionPageRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
 }
 
 type RejectRequest struct {
@@ -37,8 +73,8 @@ type RejectRequest struct {
 	Content string `json:"content" validate:"required,min=1"`
 }
 
-func (rejection *RejectRequest) Validate(validate *validator.Validate) []string {
-	return common.ValidateStruct(rejection, validate)
+func (request *RejectRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
 }
 
 type ChangeDefinitionRequest struct {
@@ -50,17 +86,18 @@ type ChangeDefinitionRequest struct {
 	Tags           *[]string  `json:"tags"`
 }
 
-func (rejection *ChangeDefinitionRequest) Validate(validate *validator.Validate) []string {
-	return common.ValidateStruct(rejection, validate)
+func (request *ChangeDefinitionRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
 }
 
 type CreateAuthorRequest struct {
-	FirstName string `json:"firstName" validate:"required,min=1"`
-	LastName  string `json:"lastName" validate:"required,min=1"`
+	FirstName string     `json:"firstName" validate:"required,min=1"`
+	LastName  string     `json:"lastName" validate:"required,min=1"`
+	Type      AuthorType `json:"type" validate:"required,min=1"`
 }
 
-func (rejection *CreateAuthorRequest) Validate(validate *validator.Validate) []string {
-	return common.ValidateStruct(rejection, validate)
+func (request *CreateAuthorRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
 }
 
 type AuthorType string
@@ -235,8 +272,8 @@ func (rejection *CreateSourceRequest) Validate(validate *validator.Validate) []s
 }
 
 type DefinitionFilter struct {
-	Title           *string      `json:"title" bson:"title" validate:"omitempty"`
-	Content         *string      `json:"content" bson:"content" validate:"omitempty"`
+	Title           *string      `json:"title" bson:"title" validate:"omitempty,min=1"`
+	Content         *string      `json:"content" bson:"content" validate:"omitempty,min=1"`
 	PublishingDates *[]time.Time `json:"publishing_dates" bson:"publishing_dates" validate:"omitempty,min=1"`
 	Authors         *[]*Author   `json:"authors" bson:"authors" validate:"omitempty,min=1,dive"`
 	Sources         *[]*Source   `json:"sources" bson:"sources" validate:"omitempty,min=1,dive"`

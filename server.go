@@ -10,7 +10,7 @@ import (
 
 // TODO: Filter, Sort
 
-// next steps: middleware with roles, setup environment in insomnia, check functionality of approving/rejecting, endpoints for pagination of authors etc.
+// next steps: check functionality of approving/rejecting, endpoints for pagination of authors etc.
 
 func main() {
 

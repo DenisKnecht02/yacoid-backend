@@ -3,7 +3,6 @@ package database
 import (
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	"yacoid_server/common"
@@ -273,7 +272,7 @@ func GetDefinitionByObjectId(id primitive.ObjectID) (*Definition, error) {
 func GetNewestDefinitions(limit int) ([]*Definition, error) {
 
 	options := options.Find().SetSort(bson.M{"creation_date": -1}).SetLimit(int64(limit))
-	return getDefinitions(bson.M{"approved": true}, options)
+	return getDocuments[Definition](definitionsCollection, bson.M{"approved": true}, options)
 
 }
 
@@ -291,16 +290,20 @@ func GetDefinitions(pageSize int, page int, definitionFilter *types.DefinitionFi
 	options.SetLimit(int64(pageSize))
 	options.SetSkip(int64((page - 1) * pageSize))
 
-	filter := CreateFilterQuery(definitionFilter)
+	filter := CreateDefinitonFilterQuery(definitionFilter)
 	fmt.Println("FILTER_QUERY")
 	fmt.Println(filter)
-	return getDefinitions(filter, &options)
+	return getDocuments[Definition](definitionsCollection, filter, &options)
 
 }
 
-func CreateFilterQuery(filter *types.DefinitionFilter) bson.D {
+func CreateDefinitonFilterQuery(filter *types.DefinitionFilter) bson.D {
 
 	query := bson.D{}
+
+	if filter == nil {
+		return query
+	}
 
 	textSearch := ""
 	if filter.Title != nil && len(*filter.Title) > 0 {
@@ -355,19 +358,6 @@ func GetDefinitionCountInCurrentQuarter() (int64, error) {
 
 }
 
-func GetPageCount(pageSize int, filter interface{}) (int64, error) {
-
-	count, err := definitionsCollection.CountDocuments(dbContext, filter, nil)
-	pageCount := int64(math.Ceil(float64(count) / float64(pageSize)))
-
-	if err != nil {
-		return 0, err
-	}
-
-	return pageCount, nil
-
-}
-
 func getDefinition(filter interface{}, options *options.FindOneOptions) (*Definition, error) {
 
 	var definition Definition
@@ -383,30 +373,7 @@ func getDefinition(filter interface{}, options *options.FindOneOptions) (*Defini
 	return &definition, nil
 }
 
-func getDefinitions(filter interface{}, options *options.FindOptions) ([]*Definition, error) {
-
-	cursor, err := definitionsCollection.Find(dbContext, filter, options)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer cursor.Close(dbContext)
-
-	definitions := []*Definition{}
-
-	for cursor.Next(dbContext) {
-
-		definition := Definition{}
-		err := cursor.Decode(&definition)
-
-		if err != nil {
-			return nil, err
-		}
-
-		definitions = append(definitions, &definition)
-	}
-
-	return definitions, nil
-
+func GetDefinitionPageCount(request *types.DefinitionPageCountRequest) (int64, error) {
+	filter := CreateDefinitonFilterQuery(request.Filter)
+	return getPageCount(definitionsCollection, request.PageSize, filter)
 }

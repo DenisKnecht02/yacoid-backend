@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"yacoid_server/constants"
 
@@ -62,6 +63,10 @@ func Connect() error {
 	})
 
 	authorsCollection = database.Collection("authors")
+	authorsCollection.Indexes().CreateOne(dbContext, mongo.IndexModel{
+		Keys: bson.D{{Key: "first_name", Value: "text"}, {Key: "last_name", Value: "text"}, {Key: "organization_name", Value: "text"}},
+	})
+
 	sourcesCollection = database.Collection("sources")
 
 	return nil
@@ -88,5 +93,46 @@ func CreateUpdateDocument(inputs []UpdateEntry) bson.D {
 	}
 
 	return update
+
+}
+
+func getDocuments[T interface{}](collection *mongo.Collection, filter interface{}, options *options.FindOptions) ([]*T, error) {
+
+	cursor, err := collection.Find(dbContext, filter, options)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer cursor.Close(dbContext)
+
+	documents := []*T{}
+
+	for cursor.Next(dbContext) {
+
+		var document T
+		err := cursor.Decode(&document)
+
+		if err != nil {
+			return nil, err
+		}
+
+		documents = append(documents, &document)
+	}
+
+	return documents, nil
+
+}
+
+func getPageCount(collection *mongo.Collection, pageSize int, filter interface{}) (int64, error) {
+
+	count, err := collection.CountDocuments(dbContext, filter, nil)
+	pageCount := int64(math.Ceil(float64(count) / float64(pageSize)))
+
+	if err != nil {
+		return 0, err
+	}
+
+	return pageCount, nil
 
 }

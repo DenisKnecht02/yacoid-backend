@@ -171,10 +171,23 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 
 	})
 
-	(*definitionApi).Get("/page_count", func(ctx *fiber.Ctx) error {
+	(*definitionApi).Post("/page_count", func(ctx *fiber.Ctx) error {
 
-		pageSize := GetOptionalIntParam(ctx.Query("page_size"), 4)
-		count, err := database.GetPageCount(pageSize, bson.M{})
+		request := new(types.DefinitionPageCountRequest)
+
+		if err := ctx.BodyParser(request); err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		validateErrors := request.Validate(validate)
+
+		if validateErrors != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(Response{
+				Error: "Error on fields: " + strings.Join(validateErrors, ", "),
+			})
+		}
+
+		count, err := database.GetDefinitionPageCount(request)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
