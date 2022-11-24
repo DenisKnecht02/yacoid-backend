@@ -26,7 +26,6 @@ var InvalidID = errors.New("INVALID_ID")
 
 var ErrorUserNotFound = errors.New("USER_NOT_FOUND")
 var ErrorDefinitionNotFound = errors.New("DEFINITION_NOT_FOUND")
-var ErrorNotEnoughPermissions = errors.New("NOT_ENOUGH_PERMISSIONS")
 
 func Connect() error {
 

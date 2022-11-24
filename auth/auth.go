@@ -9,6 +9,7 @@ import (
 
 	"github.com/authorizerdev/authorizer-go"
 	"github.com/gofiber/fiber/v2"
+	"golang.org/x/exp/slices"
 )
 
 var AuthClient *authorizer.AuthorizerClient
@@ -81,7 +82,7 @@ func GetUserByContext(ctx *fiber.Ctx) (*authorizer.User, error) {
 
 }
 
-func Authenticate(ctx *fiber.Ctx, roles ...constants.Role) (map[string]interface{}, error) {
+func Authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]interface{}, error) {
 
 	token, err := GetAuthorizationToken(ctx)
 
@@ -92,7 +93,6 @@ func Authenticate(ctx *fiber.Ctx, roles ...constants.Role) (map[string]interface
 	response, err := AuthClient.ValidateJWTToken(&authorizer.ValidateJWTTokenInput{
 		TokenType: authorizer.TokenTypeIDToken,
 		Token:     token,
-		Roles:     constants.RoleArrayToStringAdressArray(roles),
 	})
 
 	if err != nil {
@@ -101,6 +101,39 @@ func Authenticate(ctx *fiber.Ctx, roles ...constants.Role) (map[string]interface
 
 	if !response.IsValid {
 		return nil, common.ErrorValidation
+	}
+
+	roleInterfaceArray, ok := response.Claims["role"].([]interface{})
+
+	if !ok {
+		return nil, common.ErrorRoleClaimCast
+	}
+
+	roles, err := common.InterfaceArrayToStringArray(roleInterfaceArray)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(requiredRoles) == 0 {
+		requiredRoles = []constants.Role{constants.RoleUser}
+	}
+
+	hasEnoughPermissions := false
+
+	if len(requiredRoles) == 0 {
+		hasEnoughPermissions = true // no roles required
+	} else {
+		for _, requiredRole := range requiredRoles {
+			if slices.Contains(roles, requiredRole.String()) {
+				hasEnoughPermissions = true
+				break
+			}
+		}
+	}
+
+	if !hasEnoughPermissions {
+		return nil, common.ErrorNotEnoughPermissions
 	}
 
 	return response.Claims, nil

@@ -108,7 +108,7 @@ func InitErrorCodeMap() {
 
 	ErrorCodeMap[database.ErrorUserNotFound] = fiber.StatusNotFound
 	ErrorCodeMap[common.ErrorAuthorNotFound] = fiber.StatusBadRequest
-	ErrorCodeMap[database.ErrorNotEnoughPermissions] = fiber.StatusUnauthorized
+	ErrorCodeMap[common.ErrorNotEnoughPermissions] = fiber.StatusUnauthorized
 	ErrorCodeMap[ErrorEmailVerification] = fiber.StatusBadRequest
 	ErrorCodeMap[ErrorChangePassword] = fiber.StatusBadRequest
 

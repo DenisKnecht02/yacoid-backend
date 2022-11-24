@@ -9,6 +9,10 @@ import (
 )
 
 var ErrorUserIdCast = errors.New("FAILED_USER_ID_CAST")
+var ErrorRoleClaimCast = errors.New("FAILED_ROLE_CLAIM_CAST")
+var ErrorInterfaceArrayToStringArrayCast = errors.New("FAILED_INTERFACE_ARRAY_TO_STRING_ARRAY_CAST")
+var ErrorNotEnoughPermissions = errors.New("NOT_ENOUGH_PERMISSIONS")
+
 var ErrorValidation = errors.New("INVALID_INPUT")
 var ErrorInvalidType = errors.New("INVALID_TYPE")
 var ErrorNotFound = errors.New("ENTITY_NOT_FOUND")
@@ -36,7 +40,7 @@ func ValidateStruct(s interface{}, validate *validator.Validate) []string {
 
 }
 
-func InterfaceArrayToStringArray(dataArray []interface{}) ([]string, bool) {
+func InterfaceArrayToStringArray(dataArray []interface{}) ([]string, error) {
 
 	stringArray := []string{}
 
@@ -45,14 +49,14 @@ func InterfaceArrayToStringArray(dataArray []interface{}) ([]string, bool) {
 		str, ok := data.(string)
 
 		if !ok {
-			return stringArray, false
+			return stringArray, ErrorInterfaceArrayToStringArrayCast
 		}
 
 		stringArray = append(stringArray, str)
 
 	}
 
-	return stringArray, true
+	return stringArray, nil
 
 }
 
