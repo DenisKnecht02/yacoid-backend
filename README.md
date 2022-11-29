@@ -33,7 +33,7 @@ REST_PORT=3000
 
 AUTH_CLIENT_ID=
 AUTH_URL=http://localhost:8080
-AUTH_REDIRECT_URL=http://localhost:5173/
+AUTH_REDIRECT_URL=http://127.0.0.1:5173
 ```
 
 3. To fill `AUTH_CLIENT_ID` do the following:
