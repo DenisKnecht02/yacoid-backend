@@ -1,9 +1,9 @@
 package constants
 
 const (
-	EnvKeyDatabaseUrl = "DATABASE_URL"
-	EnvKeyRestPort    = "REST_PORT"
-	AUTH_CLIENT_ID    = "AUTH_CLIENT_ID"
-	AUTH_URL          = "AUTH_URL"
-	AUTH_REDIRECT_URL = "AUTH_REDIRECT_URL"
+	EnvKeyDatabaseUrl  = "DATABASE_URL"
+	EnvKeyRestPort     = "REST_PORT"
+	EnvAuthClientId    = "AUTH_CLIENT_ID"
+	EnvAuthUrl         = "AUTH_URL"
+	EnvAuthRedirectUrl = "AUTH_REDIRECT_URL"
 )

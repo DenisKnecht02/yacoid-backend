@@ -19,7 +19,7 @@ func Initialize() error {
 	defaultHeaders := map[string]string{}
 
 	var err error
-	AuthClient, err = authorizer.NewAuthorizerClient(os.Getenv(constants.AUTH_CLIENT_ID), os.Getenv(constants.AUTH_URL), os.Getenv(constants.AUTH_REDIRECT_URL), defaultHeaders)
+	AuthClient, err = authorizer.NewAuthorizerClient(os.Getenv(constants.EnvAuthClientId), os.Getenv(constants.EnvAuthUrl), os.Getenv(constants.EnvAuthRedirectUrl), defaultHeaders)
 
 	if err != nil {
 		return err

@@ -26,7 +26,7 @@ func StartAPI() {
 	api := app.Group("/api")
 
 	api.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:5173",
+		AllowOrigins: os.Getenv(constants.EnvAuthRedirectUrl),
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
