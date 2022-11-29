@@ -33,7 +33,9 @@ func CreateSource(request *types.CreateSourceRequest, userId string) error {
 	}
 
 	source.Authors = authors
-	source.Properties = request.Properties
+	source.BookProperties = request.BookProperties
+	source.JournalProperties = request.JournalProperties
+	source.WebProperties = request.WebProperties
 
 	_, err := sourcesCollection.InsertOne(dbContext, source)
 

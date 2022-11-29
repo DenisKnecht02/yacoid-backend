@@ -2,8 +2,6 @@ package database
 
 import (
 	"fmt"
-	"math/rand"
-	"strings"
 	"time"
 	"yacoid_server/common"
 	"yacoid_server/types"
@@ -19,7 +17,7 @@ func CreateAuthor(request *types.CreateAuthorRequest, userId string) error {
 	var author types.Author
 
 	author.ID = primitive.NewObjectID()
-	author.SlugId = fmt.Sprintf("%s-%s-%08d", strings.ToLower(request.LastName), strings.ToLower(request.FirstName), rand.Intn(10000000))
+	//author.SlugId = fmt.Sprintf("%s-%s-%08d", strings.ToLower(request.LastName), strings.ToLower(request.FirstName), rand.Intn(10000000))
 	author.SubmittedBy = userId
 	author.SubmittedDate = time.Now()
 	author.Type = request.Type

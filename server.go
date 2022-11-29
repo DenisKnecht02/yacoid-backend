@@ -8,9 +8,7 @@ import (
 	"yacoid_server/database"
 )
 
-// TODO: Filter, Sort
-
-// next steps: check functionality of approving/rejecting, endpoints for pagination of authors etc.
+// next steps: sources, check functionality of approving/rejecting, filter, sort
 
 func main() {
 
