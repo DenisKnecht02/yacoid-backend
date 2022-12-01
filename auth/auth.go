@@ -100,23 +100,28 @@ func Authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]i
 	}
 
 	if !response.IsValid {
-		return nil, common.ErrorValidation
+		return nil, constants.ErrorValidation
 	}
 
 	roleInterfaceArray, ok := response.Claims["role"].([]interface{})
 
 	if !ok {
-		return nil, common.ErrorRoleClaimCast
+		return nil, constants.ErrorRoleClaimCast
 	}
 
 	roles, err := common.InterfaceArrayToStringArray(roleInterfaceArray)
+	userRole := constants.RoleUser
+
+	if !slices.Contains(roles, userRole.String()) {
+		roles = append(roles, userRole.String())
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
 	if len(requiredRoles) == 0 {
-		requiredRoles = []constants.Role{constants.RoleUser}
+		requiredRoles = []constants.Role{userRole}
 	}
 
 	hasEnoughPermissions := false
@@ -133,7 +138,7 @@ func Authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]i
 	}
 
 	if !hasEnoughPermissions {
-		return nil, common.ErrorNotEnoughPermissions
+		return nil, constants.ErrorNotEnoughPermissions
 	}
 
 	return response.Claims, nil
@@ -151,7 +156,7 @@ func AuthenticateAndGetId(ctx *fiber.Ctx, roles ...constants.Role) (string, erro
 	id, ok := claims["id"].(string)
 
 	if !ok {
-		return "", common.ErrorUserIdCast
+		return "", constants.ErrorUserIdCast
 	}
 
 	return id, nil

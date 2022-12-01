@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"strings"
 	"yacoid_server/auth"
 	"yacoid_server/constants"
@@ -15,9 +14,9 @@ import (
 
 func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Validate) {
 
-	(*definitionApi).Get("/definition/:id", func(ctx *fiber.Ctx) error {
+	(*definitionApi).Get("/definition", func(ctx *fiber.Ctx) error {
 
-		id := ctx.Params("id")
+		id := ctx.Query("id")
 
 		definition, err := database.GetDefinitionById(id)
 
@@ -47,6 +46,12 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
+		_, err := types.ParseStringToDefinitionCategory(request.Category.String())
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
 		if err := ctx.BodyParser(request); err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
@@ -63,13 +68,16 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 		}
 
 		return ctx.JSON(Response{
-			Data: bson.M{"definiton": definition},
+			Message: "Successfully created definition!",
+			Data: bson.M{
+				"definitonId": definition.Hex(),
+			},
 		})
 	})
 
-	(*definitionApi).Get("/approve/:id", func(ctx *fiber.Ctx) error {
+	(*definitionApi).Get("/approve", func(ctx *fiber.Ctx) error {
 
-		definitionId := ctx.Params("id")
+		definitionId := ctx.Query("id")
 
 		id, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
 
@@ -129,6 +137,16 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
+		if request.Category != nil {
+
+			_, err := types.ParseStringToDefinitionCategory(request.Category.String())
+
+			if err != nil {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+			}
+
+		}
+
 		validateErrors := request.Validate(validate)
 
 		if validateErrors != nil {
@@ -143,7 +161,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
 		}
 
-		err = database.ChangeDefinition(request.ID, request.Title, request.Content, request.Source, request.Tags, id)
+		err = database.ChangeDefinition(request, id)
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
@@ -187,6 +205,17 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
+		for _, category := range *request.Filter.Categories {
+
+			_, err := types.ParseStringToDefinitionCategory(category.String())
+
+			if err != nil {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+			}
+
+		}
+
+		request.Filter.Approved = true
 		count, err := database.GetDefinitionPageCount(request)
 
 		if err != nil {
@@ -209,7 +238,6 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
-		fmt.Println(request)
 		validateErrors := request.Validate(validate)
 
 		if validateErrors != nil {
@@ -218,6 +246,17 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
+		for _, category := range *request.Filter.Categories {
+
+			_, err := types.ParseStringToDefinitionCategory(category.String())
+
+			if err != nil {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+			}
+
+		}
+
+		request.Filter.Approved = true
 		definitions, err := database.GetDefinitions(request.PageSize, request.Page, request.Filter, request.Sort)
 
 		if err != nil {

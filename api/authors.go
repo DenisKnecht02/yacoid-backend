@@ -1,9 +1,9 @@
 package api
 
 import (
-	"fmt"
 	"strings"
 	"yacoid_server/auth"
+	"yacoid_server/constants"
 	"yacoid_server/database"
 	"yacoid_server/types"
 
@@ -60,7 +60,6 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
-		fmt.Println(request.Filter)
 		authors, err := database.GetAuthors(request.PageSize, request.Page, request.Filter, request.Sort)
 
 		if err != nil {
@@ -75,7 +74,7 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 
 	})
 
-	(*authorApi).Post("/create", func(ctx *fiber.Ctx) error {
+	(*authorApi).Post("/", func(ctx *fiber.Ctx) error {
 
 		request := new(types.CreateAuthorRequest)
 
@@ -97,13 +96,13 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
-		id, err := auth.AuthenticateAndGetId(ctx)
+		userId, err := auth.AuthenticateAndGetId(ctx)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
 		}
 
-		err = database.CreateAuthor(request, id)
+		authorId, err := database.CreateAuthor(request, userId)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
@@ -111,7 +110,88 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 
 		return ctx.JSON(Response{
 			Message: "Successfully created author!",
+			Data: bson.M{
+				"authorId": authorId.Hex(),
+			},
 		})
+	})
+
+	(*authorApi).Delete("/", func(ctx *fiber.Ctx) error {
+
+		authorId, err := GetRequiredStringQuery(ctx.Query("id"))
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Author ID required", Error: err.Error()})
+		}
+
+		_, err = auth.Authenticate(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+		}
+
+		usedSources, err := database.DeleteAuthor(authorId)
+
+		if err != nil {
+
+			if err == constants.ErrorAuthorDeletionBecauseInUse {
+
+				return ctx.Status(GetErrorCode(err)).JSON(Response{
+					Error: err.Error(),
+					Data: bson.M{
+						"sources": usedSources,
+					},
+				})
+
+			} else {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Deletion failed", Error: err.Error()})
+			}
+
+		}
+
+		return ctx.JSON(Response{
+			Message: "Successfully deleted author!",
+		})
+	})
+
+	(*authorApi).Put("/", func(ctx *fiber.Ctx) error {
+
+		request := new(types.ChangeAuthorRequest)
+
+		if err := ctx.BodyParser(request); err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		_, err := types.ParseStringToAuthorType(request.Type.String())
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		validateErrors := request.Validate(validate)
+
+		if validateErrors != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(Response{
+				Error: "Error on fields: " + strings.Join(validateErrors, ", "),
+			})
+		}
+
+		userId, err := auth.AuthenticateAndGetId(ctx)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+		}
+
+		err = database.ChangeAuthor(request, userId, validate)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Change failed", Error: err.Error()})
+		}
+
+		return ctx.JSON(Response{
+			Message: "Successfully changed author!",
+		})
+
 	})
 
 }

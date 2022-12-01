@@ -1,14 +1,12 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"yacoid_server/auth"
-	"yacoid_server/common"
 	"yacoid_server/constants"
-	"yacoid_server/database"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -26,7 +24,7 @@ func StartAPI() {
 	api := app.Group("/api")
 
 	api.Use(cors.New(cors.Config{
-		AllowOrigins: os.Getenv(constants.EnvAuthRedirectUrl),
+		AllowOrigins: strings.TrimSuffix(strings.Replace(os.Getenv(constants.EnvAuthRedirectUrl), "localhost", "127.0.0.1", 1), "/"),
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
@@ -69,6 +67,16 @@ func GetOptionalIntParam(stringValue string, defaultValue int) int {
 
 }
 
+func GetRequiredStringQuery(queryValue string) (string, error) {
+
+	if len(queryValue) == 0 {
+		return "", constants.ErrorQueryValueRequired
+	}
+
+	return queryValue, nil
+
+}
+
 func AuthMiddleware(roles ...constants.Role) func(ctx *fiber.Ctx) error {
 	return func(ctx *fiber.Ctx) error {
 
@@ -89,16 +97,21 @@ type Response struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-var ErrorEmailVerification = errors.New("EMAIL_VERIFICATION_ERROR")
-var ErrorChangePassword = errors.New("CHANGE_PASSWORD_ERROR")
-
 var ErrorCodeMap map[error]int = map[error]int{}
 
 func GetErrorCode(err error) int {
 
+	fmt.Printf("[%T] %v\n", err, err)
+
+	/* mongo.CommandError will cause an error if using as map key -> "panic: runtime error: hash of unhashable type mongo.CommandError" */
+	if strings.HasPrefix(err.Error(), "(BadValue)") || strings.HasPrefix(err.Error(), "(Location") {
+		return fiber.StatusInternalServerError
+	}
+
 	code, exists := ErrorCodeMap[err]
 
 	if exists {
+		fmt.Printf("Error \"%v\" does not have an error code assigned to it.\n", err)
 		return code
 	}
 
@@ -108,21 +121,21 @@ func GetErrorCode(err error) int {
 
 func InitErrorCodeMap() {
 
-	ErrorCodeMap[database.InvalidID] = fiber.StatusBadRequest
-	ErrorCodeMap[common.ErrorValidation] = fiber.StatusBadRequest
-	ErrorCodeMap[common.ErrorInvalidType] = fiber.StatusBadRequest
-	ErrorCodeMap[common.ErrorNotFound] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorInvalidID] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorValidation] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorInvalidType] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorNotFound] = fiber.StatusBadRequest
 
-	ErrorCodeMap[database.ErrorUserNotFound] = fiber.StatusNotFound
-	ErrorCodeMap[common.ErrorAuthorNotFound] = fiber.StatusBadRequest
-	ErrorCodeMap[common.ErrorNotEnoughPermissions] = fiber.StatusUnauthorized
-	ErrorCodeMap[ErrorEmailVerification] = fiber.StatusBadRequest
-	ErrorCodeMap[ErrorChangePassword] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorUserNotFound] = fiber.StatusNotFound
+	ErrorCodeMap[constants.ErrorAuthorNotFound] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorSourceNotFound] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorNotEnoughPermissions] = fiber.StatusUnauthorized
+	ErrorCodeMap[constants.ErrorQueryValueRequired] = fiber.StatusBadRequest
 
-	ErrorCodeMap[database.ErrorDefinitionNotFound] = fiber.StatusNotFound
-	ErrorCodeMap[database.ErrorDefinitionAlreadyApproved] = fiber.StatusBadRequest
-	ErrorCodeMap[database.ErrorDefinitionRejectionBelongsToAnotherUser] = fiber.StatusUnauthorized
-	ErrorCodeMap[database.ErrorDefinitionRejectionNotAnsweredYet] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorDefinitionNotFound] = fiber.StatusNotFound
+	ErrorCodeMap[constants.ErrorDefinitionAlreadyApproved] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorDefinitionRejectionBelongsToAnotherUser] = fiber.StatusUnauthorized
+	ErrorCodeMap[constants.ErrorDefinitionRejectionNotAnsweredYet] = fiber.StatusBadRequest
 	ErrorCodeMap[fiber.ErrUnauthorized] = fiber.StatusUnauthorized
 
 }

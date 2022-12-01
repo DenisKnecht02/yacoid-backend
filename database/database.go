@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -21,11 +21,6 @@ var database *mongo.Database
 var definitionsCollection *mongo.Collection
 var authorsCollection *mongo.Collection
 var sourcesCollection *mongo.Collection
-
-var InvalidID = errors.New("INVALID_ID")
-
-var ErrorUserNotFound = errors.New("USER_NOT_FOUND")
-var ErrorDefinitionNotFound = errors.New("DEFINITION_NOT_FOUND")
 
 func Connect() error {
 
@@ -123,6 +118,50 @@ func getDocuments[T interface{}](collection *mongo.Collection, filter interface{
 
 }
 
+func aggregateDocuments[T interface{}](collection *mongo.Collection, pipeMap interface{}, options *options.AggregateOptions) ([]*T, error) {
+
+	cursor, err := collection.Aggregate(dbContext, pipeMap, options)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer cursor.Close(dbContext)
+
+	documents := []*T{}
+
+	for cursor.Next(dbContext) {
+
+		var document T
+		err := cursor.Decode(&document)
+
+		if err != nil {
+			return nil, err
+		}
+
+		documents = append(documents, &document)
+	}
+
+	return documents, nil
+
+}
+
+func countDocuments(collection *mongo.Collection, filter interface{}, countOptions *options.CountOptions) (int, error) {
+
+	if countOptions == nil {
+		countOptions = options.Count()
+	}
+
+	count, err := collection.CountDocuments(dbContext, filter)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return int(count), nil
+
+}
+
 func getPageCount(collection *mongo.Collection, pageSize int, filter interface{}) (int64, error) {
 
 	count, err := collection.CountDocuments(dbContext, filter, nil)
@@ -133,5 +172,40 @@ func getPageCount(collection *mongo.Collection, pageSize int, filter interface{}
 	}
 
 	return pageCount, nil
+
+}
+
+func stringsToObjectIDs(stringIds *[]string) ([]primitive.ObjectID, error) {
+
+	ids := []primitive.ObjectID{}
+	for _, stringId := range *stringIds {
+
+		id, idError := primitive.ObjectIDFromHex(stringId)
+
+		if idError != nil {
+			return nil, constants.ErrorInvalidID
+		}
+
+		ids = append(ids, id)
+	}
+
+	return ids, nil
+
+}
+
+func appendUpdate(key string, currentValue interface{}, newValue interface{}) (entries bson.D) {
+
+	if newValue != currentValue && newValue != nil {
+		entries = append(entries, bson.E{Key: key, Value: newValue})
+	}
+
+	return entries
+
+}
+
+func forceUpdate(key string, newValue interface{}) (entries bson.D) {
+
+	entries = append(entries, bson.E{Key: key, Value: newValue})
+	return entries
 
 }

@@ -1,26 +1,12 @@
 package common
 
 import (
-	"errors"
 	"time"
+	"yacoid_server/constants"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
-
-var ErrorUserIdCast = errors.New("FAILED_USER_ID_CAST")
-var ErrorRoleClaimCast = errors.New("FAILED_ROLE_CLAIM_CAST")
-var ErrorInterfaceArrayToStringArrayCast = errors.New("FAILED_INTERFACE_ARRAY_TO_STRING_ARRAY_CAST")
-var ErrorNotEnoughPermissions = errors.New("NOT_ENOUGH_PERMISSIONS")
-
-var ErrorValidation = errors.New("INVALID_INPUT")
-var ErrorInvalidType = errors.New("INVALID_TYPE")
-var ErrorNotFound = errors.New("ENTITY_NOT_FOUND")
-var ErrorAuthorNotFound = errors.New("AUTHOR_NOT_FOUND")
-var ErrorInvalidEnum = errors.New("INVALID_ENUM")
-var ErrorUnexpectedSigningMethod = errors.New("UNEXPECTED_SIGNING_METHOD")
-var ErrorMissingRole = errors.New("MISSING_ROLE")
-var ErrorValidationResponseInvalid = errors.New("VALIDATION_RESPONSE_INVALID")
 
 func ValidateStruct(s interface{}, validate *validator.Validate) []string {
 
@@ -49,7 +35,7 @@ func InterfaceArrayToStringArray(dataArray []interface{}) ([]string, error) {
 		str, ok := data.(string)
 
 		if !ok {
-			return stringArray, ErrorInterfaceArrayToStringArrayCast
+			return stringArray, constants.ErrorInterfaceArrayToStringArrayCast
 		}
 
 		stringArray = append(stringArray, str)
