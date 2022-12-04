@@ -8,7 +8,7 @@ import (
 	"yacoid_server/database"
 )
 
-// next steps: change of source, filter, sort
+// next steps: source pagination, filter, sort
 
 func main() {
 

@@ -129,7 +129,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 		})
 	})
 
-	(*definitionApi).Post("/change", func(ctx *fiber.Ctx) error {
+	(*definitionApi).Put("/", func(ctx *fiber.Ctx) error {
 
 		request := new(types.ChangeDefinitionRequest)
 

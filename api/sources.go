@@ -12,9 +12,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func AddSourcesRequests(sourceApi *fiber.Router, validate *validator.Validate) {
+func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 
-	(*sourceApi).Post("/", func(ctx *fiber.Ctx) error {
+	(*api).Post("/", func(ctx *fiber.Ctx) error {
 
 		request := new(types.CreateSourceRequest)
 
@@ -56,7 +56,7 @@ func AddSourcesRequests(sourceApi *fiber.Router, validate *validator.Validate) {
 		})
 	})
 
-	(*sourceApi).Delete("/", func(ctx *fiber.Ctx) error {
+	(*api).Delete("/", func(ctx *fiber.Ctx) error {
 
 		sourceId, err := GetRequiredStringQuery(ctx.Query("id"))
 
@@ -91,6 +91,48 @@ func AddSourcesRequests(sourceApi *fiber.Router, validate *validator.Validate) {
 
 		return ctx.JSON(Response{
 			Message: "Successfully deleted source!",
+		})
+	})
+
+	(*api).Put("/", func(ctx *fiber.Ctx) error {
+
+		request := new(types.ChangeSourceRequest)
+
+		if err := ctx.BodyParser(request); err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		if request.Type != nil {
+
+			_, err := types.ParseStringToSourceType(request.Type.String())
+
+			if err != nil {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+			}
+
+		}
+
+		validateErrors := request.Validate(validate)
+
+		if validateErrors != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(Response{
+				Error: "Error on fields: " + strings.Join(validateErrors, ", "),
+			})
+		}
+
+		id, err := auth.AuthenticateAndGetId(ctx)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+		}
+
+		err = database.ChangeSource(request, id, validate)
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		return ctx.JSON(Response{
+			Message: "Successfully changed source!",
 		})
 	})
 

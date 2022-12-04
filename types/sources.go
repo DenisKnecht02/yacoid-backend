@@ -92,9 +92,9 @@ type ChangeSourceRequest struct {
 	Type              *SourceType              `json:"type" validate:"omitempty"`
 	Authors           *[]string                `json:"authors" validate:"omitempty,min=1"`
 	Title             *string                  `json:"title" validate:"omitempty,min=1"`
-	BookProperties    *ChangeBookProperties    `json:"bookProperties" validate:"required_without_all=ChangeJournalProperties ChangeWebProperties,omitempty,dive"`
-	JournalProperties *ChangeJournalProperties `json:"journalProperties" validate:"required_without_all=ChangeBookProperties ChangeWebProperties,omitempty,dive"`
-	WebProperties     *ChangeWebProperties     `json:"webProperties" validate:"required_without_all=ChangeBookProperties ChangeJournalProperties,omitempty,dive"`
+	BookProperties    *ChangeBookProperties    `json:"bookProperties" validate:"omitempty,dive"`
+	JournalProperties *ChangeJournalProperties `json:"journalProperties" validate:"omitempty,dive"`
+	WebProperties     *ChangeWebProperties     `json:"webProperties" validate:"omitempty,dive"`
 }
 
 func (object *ChangeSourceRequest) Validate(validate *validator.Validate) []string {
