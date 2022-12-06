@@ -39,8 +39,6 @@ func StartAPI() {
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
-	fmt.Println(strings.TrimSuffix(strings.Replace(os.Getenv(constants.EnvAuthRedirectUrl), "localhost", "127.0.0.1", 1), "/"))
-
 	v1 := api.Group("/v1")
 
 	validate := validator.New()
