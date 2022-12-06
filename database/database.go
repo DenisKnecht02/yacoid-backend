@@ -62,6 +62,9 @@ func Connect() error {
 	})
 
 	sourcesCollection = database.Collection("sources")
+	sourcesCollection.Indexes().CreateOne(dbContext, mongo.IndexModel{
+		Keys: bson.D{{Key: "title", Value: "text"}},
+	})
 
 	return nil
 }

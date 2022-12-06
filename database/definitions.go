@@ -265,21 +265,21 @@ func GetNewestDefinitions(limit int) ([]*types.Definition, error) {
 
 }
 
-func GetDefinitions(pageSize int, page int, definitionFilter *types.DefinitionFilter, sort *interface{}) ([]*types.Definition, error) {
+func GetDefinitions(request *types.DefinitionPageRequest) ([]*types.Definition, error) {
 
-	if pageSize <= 0 || page <= 0 {
+	if request.PageSize <= 0 || request.Page <= 0 {
 		return nil, constants.ErrorInvalidType
 	}
 
 	options := options.FindOptions{}
 
-	if sort != nil {
-		options.SetSort(*sort)
+	if request.Sort != nil {
+		options.SetSort(*request.Sort)
 	}
-	options.SetLimit(int64(pageSize))
-	options.SetSkip(int64((page - 1) * pageSize))
+	options.SetLimit(int64(request.PageSize))
+	options.SetSkip(int64((request.Page - 1) * request.PageSize))
 
-	filter := CreateDefinitonFilterQuery(definitionFilter)
+	filter := CreateDefinitonFilterQuery(request.Filter)
 	fmt.Println("FILTER_QUERY")
 	fmt.Println(filter)
 	return getDocuments[types.Definition](definitionsCollection, filter, &options)

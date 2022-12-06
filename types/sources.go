@@ -18,7 +18,7 @@ type Source struct {
 	ApprovedBy        *string              `bson:"approved_by" json:"approvedBy"`
 	ApprovedDate      *time.Time           `bson:"approved_date" json:"approvedDate"`
 	Approved          bool                 `bson:"approved" json:"approved"`
-	Type              SourceType           `bson:"type" json:"type"`
+	Type              SourceType           `bson:"type" json:"type" validate:"required,is-source-type"`
 	Authors           []primitive.ObjectID `bson:"authors" json:"authors" validate:"required,min=1"`
 	Title             string               `bson:"title" json:"title" validate:"required,min=1"`
 	BookProperties    *BookProperties      `bson:"book_properties" json:"bookProperties" validate:"required_without_all=JournalProperties WebProperties,omitempty,dive"`
@@ -75,7 +75,7 @@ type WebProperties struct {
 }
 
 type CreateSourceRequest struct {
-	Type              SourceType         `bson:"type" json:"type"`
+	Type              SourceType         `bson:"type" json:"type" validate:"required,is-source-type"`
 	Authors           []string           `bson:"authors" json:"authors" validate:"required,min=1"`
 	Title             string             `bson:"title" json:"title" validate:"required,min=1"`
 	BookProperties    *BookProperties    `bson:"book_properties" json:"bookProperties" validate:"required_without_all=JournalProperties WebProperties,omitempty,dive"`
@@ -89,7 +89,7 @@ func (object *CreateSourceRequest) Validate(validate *validator.Validate) []stri
 
 type ChangeSourceRequest struct {
 	ID                string                   `json:"id" validate:"required"`
-	Type              *SourceType              `json:"type" validate:"omitempty"`
+	Type              *SourceType              `json:"type" validate:"omitempty,is-source-type"`
 	Authors           *[]string                `json:"authors" validate:"omitempty,min=1"`
 	Title             *string                  `json:"title" validate:"omitempty,min=1"`
 	BookProperties    *ChangeBookProperties    `json:"bookProperties" validate:"omitempty,dive"`
@@ -174,4 +174,31 @@ func (sourceType SourceType) String() string {
 		return "web"
 	}
 	return "unknown"
+}
+
+type SourcePageCountRequest struct {
+	PageSize int           `json:"pageSize" validate:"required,min=1"`
+	Filter   *SourceFilter `json:"filter" validate:"omitempty,dive"`
+}
+
+func (request *SourcePageCountRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
+}
+
+type SourcePageRequest struct {
+	PageSize int           `json:"pageSize" validate:"required,min=1"`
+	Page     int           `json:"page" validate:"required,min=1"`
+	Filter   *SourceFilter `json:"filter" validate:"omitempty,dive"`
+	Sort     *interface{}  `json:"sort"`
+}
+
+func (request *SourcePageRequest) Validate(validate *validator.Validate) []string {
+	return common.ValidateStruct(request, validate)
+}
+
+type SourceFilter struct {
+	Approved  bool          `json:"approved" bson:"approved" validate:"omitempty"`
+	Types     *[]SourceType `json:"types" bson:"types" validate:"omitempty,dive,is-source-type"`
+	Title     *string       `json:"title" bson:"title" validate:"omitempty,min=1"`
+	AuthorIds *[]string     `json:"authors" bson:"authors" validate:"omitempty,min=1"`
 }

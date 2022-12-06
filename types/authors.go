@@ -19,7 +19,7 @@ type Author struct {
 	ApprovedBy             *string                 `bson:"approved_by" json:"approvedBy"`
 	ApprovedDate           *time.Time              `bson:"approved_date" json:"approvedDate"`
 	Approved               bool                    `bson:"approved" json:"approved"`
-	Type                   AuthorType              `bson:"type" json:"type" validate:"required"`
+	Type                   AuthorType              `bson:"type" json:"type" validate:"required,is-author-type"`
 	PersonProperties       *PersonProperties       `bson:"person_properties" json:"personProperties" validate:"required_without=OrganizationProperties,omitempty,dive"`
 	OrganizationProperties *OrganizationProperties `bson:"organization_properties" json:"organizationProperties" validate:"required_without=PersonProperties,omitempty,dive"`
 }
@@ -47,7 +47,7 @@ type OrganizationProperties struct {
 }
 
 type CreateAuthorRequest struct {
-	Type                   AuthorType              `bson:"type" json:"type" validate:"required"`
+	Type                   AuthorType              `bson:"type" json:"type" validate:"required,is-author-type"`
 	PersonProperties       *PersonProperties       `bson:"person_properties" json:"personProperties" validate:"required_without=OrganizationProperties,omitempty,dive"`
 	OrganizationProperties *OrganizationProperties `bson:"organization_properties" json:"organizationProperties" validate:"required_without=PersonProperties,omitempty,dive"`
 }
@@ -58,7 +58,7 @@ func (object *CreateAuthorRequest) Validate(validate *validator.Validate) []stri
 
 type ChangeAuthorRequest struct {
 	ID                     *string                       `json:"id" validate:"required"`
-	Type                   *AuthorType                   `json:"type" validate:"omitempty"`
+	Type                   *AuthorType                   `json:"type" validate:"omitempty,is-author-type"`
 	PersonProperties       *ChangePersonProperties       `json:"personProperties" validate:"omitempty,dive"`
 	OrganizationProperties *ChangeOrganizationProperties `json:"organizationProperties" validate:"omitempty,dive"`
 }
@@ -97,10 +97,10 @@ func (request *AuthorPageRequest) Validate(validate *validator.Validate) []strin
 }
 
 type AuthorFilter struct {
-	FirstName        *string `json:"firstName" validate:"omitempty,min=1"`
-	LastName         *string `json:"lastName" validate:"omitempty,min=1"`
-	OrganizationName *string `json:"organizationName" validate:"omitempty,min=1"`
-	Type             *string `json:"type" validate:"omitempty,min=1"`
+	FirstName        *string       `json:"firstName" validate:"omitempty,min=1"`
+	LastName         *string       `json:"lastName" validate:"omitempty,min=1"`
+	OrganizationName *string       `json:"organizationName" validate:"omitempty,min=1"`
+	Types            *[]AuthorType `json:"types" validate:"omitempty,dive,is-author-type"`
 }
 
 type AuthorType string

@@ -42,7 +42,7 @@ type SubmitDefinitionRequest struct {
 	Content        string              `json:"content" validate:"required,min=1"`
 	SourceId       string              `json:"sourceId" validate:"required"`
 	PublishingDate time.Time           `json:"publishingDate" validate:"required"`
-	Category       *DefinitionCategory `json:"category" validate:"required,min=1"`
+	Category       *DefinitionCategory `json:"category" validate:"required,is-definition-category"`
 }
 
 func (request *SubmitDefinitionRequest) Validate(validate *validator.Validate) []string {
@@ -84,7 +84,7 @@ type ChangeDefinitionRequest struct {
 	Content        *string             `json:"content" validate:"omitempty,min=1"`
 	SourceId       *string             `json:"sourceId" validate:"omitempty,min=1"`
 	PublishingDate *time.Time          `json:"publishingDate" validate:"omitempty"`
-	Category       *DefinitionCategory `json:"category" validate:"omitempty,min=1"`
+	Category       *DefinitionCategory `json:"category" validate:"omitempty,is-definition-category"`
 }
 
 func (request *ChangeDefinitionRequest) Validate(validate *validator.Validate) []string {
@@ -94,7 +94,7 @@ func (request *ChangeDefinitionRequest) Validate(validate *validator.Validate) [
 type DefinitionFilter struct {
 	Approved        bool                  `json:"approved" bson:"approved" validate:"omitempty"`
 	Content         *string               `json:"content" bson:"content" validate:"omitempty,min=1"`
-	Categories      *[]DefinitionCategory `json:"categories" bson:"categories" validate:"omitempty,min=1"`
+	Categories      *[]DefinitionCategory `json:"categories" bson:"categories" validate:"omitempty,dive,is-definition-category"`
 	AuthorIds       *[]string             `json:"authors" bson:"authors" validate:"omitempty,min=1"`
 	PublishingYears *[]int                `json:"publishingYears" bson:"publishing_years" validate:"omitempty,min=1"`
 }

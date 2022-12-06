@@ -46,12 +46,6 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
-		_, err := types.ParseStringToDefinitionCategory(request.Category.String())
-
-		if err != nil {
-			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-		}
-
 		if err := ctx.BodyParser(request); err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
@@ -137,16 +131,6 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
-		if request.Category != nil {
-
-			_, err := types.ParseStringToDefinitionCategory(request.Category.String())
-
-			if err != nil {
-				return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-			}
-
-		}
-
 		validateErrors := request.Validate(validate)
 
 		if validateErrors != nil {
@@ -205,16 +189,6 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
-		for _, category := range *request.Filter.Categories {
-
-			_, err := types.ParseStringToDefinitionCategory(category.String())
-
-			if err != nil {
-				return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-			}
-
-		}
-
 		request.Filter.Approved = true
 		count, err := database.GetDefinitionPageCount(request)
 
@@ -246,18 +220,8 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
-		for _, category := range *request.Filter.Categories {
-
-			_, err := types.ParseStringToDefinitionCategory(category.String())
-
-			if err != nil {
-				return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-			}
-
-		}
-
 		request.Filter.Approved = true
-		definitions, err := database.GetDefinitions(request.PageSize, request.Page, request.Filter, request.Sort)
+		definitions, err := database.GetDefinitions(request)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})

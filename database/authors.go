@@ -280,8 +280,8 @@ func CreateAuthorFilterQuery(filter *types.AuthorFilter) bson.D {
 		query = append(query, bson.E{Key: "$text", Value: bson.D{{Key: "$search", Value: textSearch}}})
 	}
 
-	if filter.Type != nil {
-		query = append(query, bson.E{Key: "type", Value: bson.D{{Key: "$in", Value: *filter.Type}}})
+	if filter.Types != nil && len(*filter.Types) > 0 {
+		query = append(query, bson.E{Key: "type", Value: bson.D{{Key: "$in", Value: *filter.Types}}})
 	}
 
 	return query

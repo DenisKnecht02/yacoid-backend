@@ -82,12 +82,6 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
-		_, err := types.ParseStringToAuthorType(request.Type.String())
-
-		if err != nil {
-			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-		}
-
 		validateErrors := request.Validate(validate)
 
 		if validateErrors != nil {

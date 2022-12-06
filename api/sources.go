@@ -22,12 +22,6 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
-		_, err := types.ParseStringToSourceType(request.Type.String())
-
-		if err != nil {
-			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-		}
-
 		validateErrors := request.Validate(validate)
 
 		if validateErrors != nil {
@@ -102,16 +96,6 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
-		if request.Type != nil {
-
-			_, err := types.ParseStringToSourceType(request.Type.String())
-
-			if err != nil {
-				return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-			}
-
-		}
-
 		validateErrors := request.Validate(validate)
 
 		if validateErrors != nil {
@@ -134,6 +118,68 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 		return ctx.JSON(Response{
 			Message: "Successfully changed source!",
 		})
+	})
+
+	(*api).Post("/page_count", func(ctx *fiber.Ctx) error {
+
+		request := new(types.SourcePageCountRequest)
+
+		if err := ctx.BodyParser(request); err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		validateErrors := request.Validate(validate)
+
+		if validateErrors != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(Response{
+				Error: "Error on fields: " + strings.Join(validateErrors, ", "),
+			})
+		}
+
+		request.Filter.Approved = true
+		count, err := database.GetSourcePageCount(request)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		return ctx.JSON(Response{
+			Data: bson.M{
+				"count": count,
+			},
+		})
+
+	})
+
+	(*api).Post("/page", func(ctx *fiber.Ctx) error {
+
+		request := new(types.SourcePageRequest)
+
+		if err := ctx.BodyParser(request); err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		validateErrors := request.Validate(validate)
+
+		if validateErrors != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(Response{
+				Error: "Error on fields: " + strings.Join(validateErrors, ", "),
+			})
+		}
+
+		request.Filter.Approved = true
+		sources, err := database.GetSources(request)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		return ctx.JSON(Response{
+			Data: bson.M{
+				"sources": sources,
+			},
+		})
+
 	})
 
 }

@@ -8,7 +8,6 @@ import (
 	"yacoid_server/types"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/jinzhu/copier"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -162,19 +161,6 @@ func CountSourcesWithAuthor(authorId primitive.ObjectID) (int, error) {
 
 }
 
-func GetSources(filter interface{}) (*[]*types.Source, error) {
-
-	options := options.FindOptions{}
-	sources, err := getDocuments[types.Source](sourcesCollection, filter, &options)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &sources, nil
-
-}
-
 func GetSourcesWithAuthor(authorId primitive.ObjectID) (*[]*types.Source, error) {
 
 	authors := []primitive.ObjectID{authorId}
@@ -255,9 +241,6 @@ func ChangeSource(request *types.ChangeSourceRequest, userId string, validate *v
 	if source.Approved {
 		return constants.ErrorSourceAlreadyApproved
 	}
-
-	oldSource := types.Source{}
-	copier.Copy(oldSource, source)
 
 	/* Change fields */
 
@@ -572,5 +555,60 @@ func GetSourceCountInCurrentQuarter() (int64, error) {
 
 	count, err := sourcesCollection.CountDocuments(dbContext, filter, nil)
 	return count, err
+
+}
+
+func GetSources(request *types.SourcePageRequest) ([]*types.Source, error) {
+
+	if request.PageSize <= 0 || request.Page <= 0 {
+		return nil, constants.ErrorInvalidType
+	}
+
+	options := options.FindOptions{}
+
+	if request.Sort != nil {
+		options.SetSort(*request.Sort)
+	}
+	options.SetLimit(int64(request.PageSize))
+	options.SetSkip(int64((request.Page - 1) * request.PageSize))
+
+	filter := CreateSourceFilterQuery(request.Filter)
+	return getDocuments[types.Source](sourcesCollection, filter, &options)
+
+}
+
+func GetSourcePageCount(request *types.SourcePageCountRequest) (int64, error) {
+	filter := CreateSourceFilterQuery(request.Filter)
+	return getPageCount(sourcesCollection, request.PageSize, filter)
+}
+
+func CreateSourceFilterQuery(filter *types.SourceFilter) bson.D {
+
+	query := bson.D{}
+
+	if filter == nil {
+		return query
+	}
+
+	textSearch := ""
+	if filter.Title != nil && len(*filter.Title) > 0 {
+		textSearch = *filter.Title
+	}
+
+	if len(textSearch) > 0 {
+		query = append(query, bson.E{Key: "$text", Value: bson.D{{Key: "$search", Value: textSearch}}})
+	}
+
+	if filter.Types != nil && len(*filter.Types) > 0 {
+		query = append(query, bson.E{Key: "type", Value: bson.D{{Key: "$in", Value: *filter.Types}}})
+	}
+
+	if filter.AuthorIds != nil && len(*filter.AuthorIds) > 0 {
+		query = append(query, bson.E{Key: "authors", Value: bson.D{{Key: "$in", Value: *filter.AuthorIds}}})
+	}
+
+	query = append(query, bson.E{Key: "approved", Value: filter.Approved})
+
+	return query
 
 }
