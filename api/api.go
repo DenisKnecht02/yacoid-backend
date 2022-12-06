@@ -24,10 +24,22 @@ func StartAPI() {
 
 	api := app.Group("/api")
 
+	allowedOrigins := []string{}
+
+	if strings.Contains(os.Getenv(constants.EnvAuthRedirectUrl), "localhost") {
+		allowedOrigins = append(allowedOrigins, strings.TrimSuffix(strings.Replace(os.Getenv(constants.EnvAuthRedirectUrl), "localhost", "127.0.0.1", 1), "/"))
+	} else if strings.Contains(os.Getenv(constants.EnvAuthRedirectUrl), "127.0.0.1") {
+		allowedOrigins = append(allowedOrigins, strings.TrimSuffix(strings.Replace(os.Getenv(constants.EnvAuthRedirectUrl), "127.0.0.1", "localhost", 1), "/"))
+	}
+
+	allowedOrigins = append(allowedOrigins, strings.TrimSuffix(os.Getenv(constants.EnvAuthRedirectUrl), "/"))
+
 	api.Use(cors.New(cors.Config{
-		AllowOrigins: strings.TrimSuffix(strings.Replace(os.Getenv(constants.EnvAuthRedirectUrl), "localhost", "127.0.0.1", 1), "/"),
+		AllowOrigins: strings.Join(allowedOrigins, ","),
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
+
+	fmt.Println(strings.TrimSuffix(strings.Replace(os.Getenv(constants.EnvAuthRedirectUrl), "localhost", "127.0.0.1", 1), "/"))
 
 	v1 := api.Group("/v1")
 
