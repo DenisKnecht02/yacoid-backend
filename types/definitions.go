@@ -38,11 +38,11 @@ func (definition *Definition) IsApproved() bool {
 }
 
 type SubmitDefinitionRequest struct {
-	Title          string              `json:"title" validate:"required,min=1"`
-	Content        string              `json:"content" validate:"required,min=1"`
-	SourceId       string              `json:"sourceId" validate:"required"`
-	PublishingDate time.Time           `json:"publishingDate" validate:"required"`
-	Category       *DefinitionCategory `json:"category" validate:"required,is-definition-category"`
+	Title          string             `json:"title" validate:"required,min=1"`
+	Content        string             `json:"content" validate:"required,min=1"`
+	SourceId       string             `json:"sourceId" validate:"required"`
+	PublishingDate time.Time          `json:"publishingDate" validate:"required"`
+	Category       DefinitionCategory `json:"category" validate:"required,is-definition-category"`
 }
 
 func (request *SubmitDefinitionRequest) Validate(validate *validator.Validate) []string {

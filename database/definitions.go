@@ -29,7 +29,7 @@ func SubmitDefinition(request *types.SubmitDefinitionRequest, userId string) (*p
 
 	definition.Title = request.Title
 	definition.Content = request.Content
-	definition.Category = *request.Category
+	definition.Category = request.Category
 	definition.PublishingDate = request.PublishingDate
 
 	sourceId, err := primitive.ObjectIDFromHex(request.SourceId)
@@ -38,10 +38,10 @@ func SubmitDefinition(request *types.SubmitDefinitionRequest, userId string) (*p
 		return nil, constants.ErrorInvalidID
 	}
 
-	sourceExistsError := validateSourceExists(sourceId)
+	err = validateSourceExists(sourceId)
 
-	if sourceExistsError != nil {
-		return nil, sourceExistsError
+	if err != nil {
+		return nil, err
 	}
 
 	definition.Source = sourceId

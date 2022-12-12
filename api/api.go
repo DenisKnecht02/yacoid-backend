@@ -39,12 +39,12 @@ func StartAPI() {
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
-	v1 := api.Group("/v1")
-
 	validate := validator.New()
 	validate.RegisterValidation("is-author-type", ValidateAuthorType)
 	validate.RegisterValidation("is-source-type", ValidateSourceType)
 	validate.RegisterValidation("is-definition-category", ValidateDefinitionCategory)
+
+	v1 := api.Group("/v1")
 
 	definitionApi := v1.Group("/definitions")
 	AddDefinitionRequests(&definitionApi, validate)

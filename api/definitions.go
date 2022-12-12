@@ -46,10 +46,6 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			})
 		}
 
-		if err := ctx.BodyParser(request); err != nil {
-			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
-		}
-
 		id, err := auth.AuthenticateAndGetId(ctx)
 
 		if err != nil {
