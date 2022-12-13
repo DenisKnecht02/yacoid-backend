@@ -1,6 +1,8 @@
 # The base go-image
 FROM golang:1.19-alpine
 
+RUN apk add --no-cache ca-certificates
+
 # Create a directory for the app
 RUN mkdir /app
 
