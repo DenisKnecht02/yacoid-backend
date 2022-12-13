@@ -15,7 +15,7 @@ func main() {
 	err := common.LoadEnvironmentVariables()
 
 	if err != nil {
-		panic(fmt.Sprintf("Failed to load env variables: %v\n", err))
+		fmt.Printf("Failed to load env variables from .env-file. Using OS env variables. Error: %v\n", err)
 	}
 
 	err = database.Connect()

@@ -1,2 +1,2 @@
 docker network create yacoid-backend-network
-cd ../ && docker-compose up
+docker-compose -f ../docker-compose.authorizer.yml up
