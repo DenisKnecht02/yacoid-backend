@@ -77,7 +77,6 @@ type WebProperties struct {
 type CreateSourceRequest struct {
 	Type              SourceType         `bson:"type" json:"type" validate:"required,is-source-type"`
 	Authors           []string           `bson:"authors" json:"authors" validate:"required,min=1"`
-	Title             string             `bson:"title" json:"title" validate:"required,min=1"`
 	BookProperties    *BookProperties    `bson:"book_properties" json:"bookProperties" validate:"required_without_all=JournalProperties WebProperties,omitempty,dive"`
 	JournalProperties *JournalProperties `bson:"journal_properties" json:"journalProperties" validate:"required_without_all=BookProperties WebProperties,omitempty,dive"`
 	WebProperties     *WebProperties     `bson:"web_properties" json:"webProperties" validate:"required_without_all=BookProperties JournalProperties,omitempty,dive"`
