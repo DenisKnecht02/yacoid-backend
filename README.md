@@ -38,8 +38,9 @@ AUTH_REDIRECT_URL=http://127.0.0.1:5173
 3. To fill `AUTH_CLIENT_ID` do the following:
    1. Navigate into `Environment > OAuth Config` in the Authorizer Dashboard
    2. Copy the client id
-4. Run the command `go run .` or `air` in the project root folder
 
+## Start the system
+1. Run the command `go run .` or `air` in the project root folder
 
 <br/>
 <br/>
