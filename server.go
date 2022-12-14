@@ -8,7 +8,13 @@ import (
 	"yacoid_server/database"
 )
 
-// next steps: sort
+// next steps: sort, deletion of definition
+
+/*
+
+	TODO: env variable validation (required, defaults)
+
+*/
 
 func main() {
 
