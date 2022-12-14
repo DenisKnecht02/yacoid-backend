@@ -374,6 +374,32 @@ func GetDefinitionsWithSource(id primitive.ObjectID) (*[]*types.Definition, erro
 
 }
 
+func DeleteDefinition(definitionId string) error {
+
+	id, err := primitive.ObjectIDFromHex(definitionId)
+
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{
+		"_id": id,
+	}
+
+	result, err := definitionsCollection.DeleteOne(dbContext, filter)
+
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return constants.ErrorDefinitionNotFound
+	}
+
+	return nil
+
+}
+
 func getDefinition(filter interface{}, options *options.FindOneOptions) (*types.Definition, error) {
 
 	var definition types.Definition

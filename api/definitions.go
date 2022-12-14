@@ -12,9 +12,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Validate) {
+func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 
-	(*definitionApi).Get("/definition", func(ctx *fiber.Ctx) error {
+	(*api).Get("/definition", func(ctx *fiber.Ctx) error {
 
 		id := ctx.Query("id")
 
@@ -30,7 +30,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 
 	})
 
-	(*definitionApi).Post("/submit", func(ctx *fiber.Ctx) error {
+	(*api).Post("/submit", func(ctx *fiber.Ctx) error {
 
 		request := new(types.SubmitDefinitionRequest)
 
@@ -65,7 +65,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 		})
 	})
 
-	(*definitionApi).Get("/approve", func(ctx *fiber.Ctx) error {
+	(*api).Get("/approve", func(ctx *fiber.Ctx) error {
 
 		definitionId := ctx.Query("id")
 
@@ -87,7 +87,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 
 	})
 
-	(*definitionApi).Post("/reject", func(ctx *fiber.Ctx) error {
+	(*api).Post("/reject", func(ctx *fiber.Ctx) error {
 
 		request := new(types.RejectRequest)
 
@@ -119,7 +119,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 		})
 	})
 
-	(*definitionApi).Put("/", func(ctx *fiber.Ctx) error {
+	(*api).Put("/", func(ctx *fiber.Ctx) error {
 
 		request := new(types.ChangeDefinitionRequest)
 
@@ -151,7 +151,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 		})
 	})
 
-	(*definitionApi).Get("/newest_definitions", func(ctx *fiber.Ctx) error {
+	(*api).Get("/newest_definitions", func(ctx *fiber.Ctx) error {
 
 		limit := GetOptionalIntParam(ctx.Query("limit"), 4)
 
@@ -169,7 +169,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 
 	})
 
-	(*definitionApi).Post("/page_count", func(ctx *fiber.Ctx) error {
+	(*api).Post("/page_count", func(ctx *fiber.Ctx) error {
 
 		request := new(types.DefinitionPageCountRequest)
 
@@ -200,7 +200,7 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 
 	})
 
-	(*definitionApi).Post("/page", func(ctx *fiber.Ctx) error {
+	(*api).Post("/page", func(ctx *fiber.Ctx) error {
 
 		request := new(types.DefinitionPageRequest)
 
@@ -229,6 +229,31 @@ func AddDefinitionRequests(definitionApi *fiber.Router, validate *validator.Vali
 			},
 		})
 
+	})
+
+	(*api).Delete("/", func(ctx *fiber.Ctx) error {
+
+		definitionId, err := GetRequiredStringQuery(ctx.Query("id"))
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Definition ID required", Error: err.Error()})
+		}
+
+		_, err = auth.Authenticate(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+		}
+
+		err = database.DeleteDefinition(definitionId)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Deletion failed", Error: err.Error()})
+		}
+
+		return ctx.JSON(Response{
+			Message: "Successfully deleted definition!",
+		})
 	})
 
 }
