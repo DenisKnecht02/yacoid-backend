@@ -164,7 +164,9 @@ func InitErrorCodeMap() {
 
 	ErrorCodeMap[constants.ErrorUserNotFound] = fiber.StatusNotFound
 	ErrorCodeMap[constants.ErrorAuthorNotFound] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorAuthorDeletionBecauseInUse] = fiber.StatusBadRequest
 	ErrorCodeMap[constants.ErrorSourceNotFound] = fiber.StatusBadRequest
+	ErrorCodeMap[constants.ErrorSourceDeletionBecauseInUse] = fiber.StatusBadRequest
 	ErrorCodeMap[constants.ErrorNotEnoughPermissions] = fiber.StatusUnauthorized
 	ErrorCodeMap[constants.ErrorQueryValueRequired] = fiber.StatusBadRequest
 
