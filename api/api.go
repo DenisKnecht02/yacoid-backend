@@ -147,10 +147,10 @@ func GetErrorCode(err error) int {
 	code, exists := ErrorCodeMap[err]
 
 	if exists {
-		fmt.Printf("Error \"%v\" does not have an error code assigned to it.\n", err)
 		return code
 	}
 
+	fmt.Printf("Error \"%v\" does not have an error code assigned to it.\n", err)
 	return fiber.StatusInternalServerError
 
 }
