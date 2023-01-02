@@ -185,6 +185,10 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
+		if request.Filter == nil {
+			request.Filter = &types.DefinitionFilter{}
+		}
+
 		request.Filter.Approved = true
 		count, err := database.GetDefinitionPageCount(request)
 
@@ -214,6 +218,10 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			return ctx.Status(fiber.StatusBadRequest).JSON(Response{
 				Error: "Error on fields: " + strings.Join(validateErrors, ", "),
 			})
+		}
+
+		if request.Filter == nil {
+			request.Filter = &types.DefinitionFilter{}
 		}
 
 		request.Filter.Approved = true
