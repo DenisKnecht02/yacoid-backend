@@ -8,7 +8,7 @@ import (
 	"yacoid_server/database"
 )
 
-// next steps: sort, deletion of definition
+// next steps: get source and author by id, sort
 
 /*
 

@@ -25,7 +25,7 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 		}
 
 		return ctx.JSON(Response{
-			Data: bson.M{"definiton": definition},
+			Data: bson.M{"definition": definition},
 		})
 
 	})
