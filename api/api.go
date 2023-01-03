@@ -35,8 +35,9 @@ func StartAPI() {
 	allowedOrigins = append(allowedOrigins, strings.TrimSuffix(os.Getenv(constants.EnvAuthRedirectUrl), "/"))
 
 	api.Use(cors.New(cors.Config{
-		AllowOrigins: strings.Join(allowedOrigins, ","),
-		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowOrigins:     strings.Join(allowedOrigins, ","),
+		AllowHeaders:     "Origin, Content-Type, Accept",
+		AllowCredentials: true,
 	}))
 
 	validate := validator.New()
