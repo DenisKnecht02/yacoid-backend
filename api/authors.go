@@ -12,9 +12,31 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
+func AddAuthorsRequests(api *fiber.Router, validate *validator.Validate) {
 
-	(*authorApi).Post("/page_count", func(ctx *fiber.Ctx) error {
+	(*api).Get("/author", func(ctx *fiber.Ctx) error {
+
+		id := ctx.Query("id")
+
+		author, err := database.GetAuthorById(id)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		response, err := database.AuthorToResponse(author)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		return ctx.JSON(Response{
+			Data: bson.M{"author": response},
+		})
+
+	})
+
+	(*api).Post("/page_count", func(ctx *fiber.Ctx) error {
 
 		request := new(types.AuthorPageCountRequest)
 
@@ -44,7 +66,7 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 
 	})
 
-	(*authorApi).Post("/page", func(ctx *fiber.Ctx) error {
+	(*api).Post("/page", func(ctx *fiber.Ctx) error {
 
 		request := new(types.AuthorPageRequest)
 
@@ -60,7 +82,13 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
-		authors, err := database.GetAuthors(request.PageSize, request.Page, request.Filter, request.Sort)
+		authors, err := database.GetAuthors(request.PageSize, request.Page, request.Filter)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		responses, err := database.AuthorsToResponses(&authors)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
@@ -68,13 +96,13 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 
 		return ctx.JSON(Response{
 			Data: bson.M{
-				"authors": authors,
+				"authors": responses,
 			},
 		})
 
 	})
 
-	(*authorApi).Post("/", func(ctx *fiber.Ctx) error {
+	(*api).Post("/", func(ctx *fiber.Ctx) error {
 
 		request := new(types.CreateAuthorRequest)
 
@@ -110,7 +138,7 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 		})
 	})
 
-	(*authorApi).Delete("/", func(ctx *fiber.Ctx) error {
+	(*api).Delete("/", func(ctx *fiber.Ctx) error {
 
 		authorId, err := GetRequiredStringQuery(ctx.Query("id"))
 
@@ -148,7 +176,7 @@ func AddAuthorsRequests(authorApi *fiber.Router, validate *validator.Validate) {
 		})
 	})
 
-	(*authorApi).Put("/", func(ctx *fiber.Ctx) error {
+	(*api).Put("/", func(ctx *fiber.Ctx) error {
 
 		request := new(types.ChangeAuthorRequest)
 

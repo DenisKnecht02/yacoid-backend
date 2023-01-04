@@ -10,8 +10,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type SourceResponse struct {
+	ID                primitive.ObjectID `bson:"_id" json:"id"`
+	SubmittedBy       string             `bson:"submitted_by" json:"submittedBy"` // user name instead of id
+	SubmittedDate     time.Time          `bson:"submitted_date" json:"submittedDate"`
+	PublishingDate    time.Time          `bson:"publishing_date" json:"publishingDate"`
+	Type              SourceType         `bson:"type" json:"type" validate:"required,is-source-type"`
+	Authors           []AuthorResponse   `bson:"authors" json:"authors" validate:"required,min=1"`
+	BookProperties    *BookProperties    `bson:"book_properties" json:"bookProperties" validate:"required_without_all=JournalProperties WebProperties,omitempty,dive"`
+	JournalProperties *JournalProperties `bson:"journal_properties" json:"journalProperties" validate:"required_without_all=BookProperties WebProperties,omitempty,dive"`
+	WebProperties     *WebProperties     `bson:"web_properties" json:"webProperties" validate:"required_without_all=BookProperties JournalProperties,omitempty,dive"`
+}
+
 type Source struct {
-	ID                primitive.ObjectID   `bson:"_id" json:"-"`
+	ID                primitive.ObjectID   `bson:"_id" json:"id"`
 	SubmittedBy       string               `bson:"submitted_by" json:"submittedBy"`
 	SubmittedDate     time.Time            `bson:"submitted_date" json:"submittedDate"`
 	LastChangeDate    time.Time            `bson:"last_change_date" json:"lastChangeDate"`
@@ -90,6 +102,7 @@ type ChangeSourceRequest struct {
 	ID                string                   `json:"id" validate:"required"`
 	Type              *SourceType              `json:"type" validate:"omitempty,is-source-type"`
 	Authors           *[]string                `json:"authors" validate:"omitempty,min=1"`
+	PublishingDate    time.Time                `bson:"publishing_date" json:"publishingDate" validate:"omitempty"`
 	BookProperties    *ChangeBookProperties    `json:"bookProperties" validate:"omitempty,dive"`
 	JournalProperties *ChangeJournalProperties `json:"journalProperties" validate:"omitempty,dive"`
 	WebProperties     *ChangeWebProperties     `json:"webProperties" validate:"omitempty,dive"`
@@ -188,7 +201,6 @@ type SourcePageRequest struct {
 	PageSize int           `json:"pageSize" validate:"required,min=1"`
 	Page     int           `json:"page" validate:"required,min=1"`
 	Filter   *SourceFilter `json:"filter" validate:"omitempty,dive"`
-	Sort     *interface{}  `json:"sort"`
 }
 
 func (request *SourcePageRequest) Validate(validate *validator.Validate) []string {

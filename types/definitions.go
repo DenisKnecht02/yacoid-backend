@@ -10,6 +10,29 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type DefinitionsOfUserResponse struct {
+	ID            primitive.ObjectID    `bson:"_id" json:"id"`
+	SubmittedBy   string                `bson:"submitted_by" json:"submittedBy"` // user name instead of id
+	SubmittedDate time.Time             `bson:"submitted_date" json:"submittedDate"`
+	ApprovedBy    *string               `bson:"approved_by" json:"approvedBy"`
+	ApprovedDate  *time.Time            `bson:"approved_date" json:"approvedDate"`
+	Approved      bool                  `bson:"approved" json:"approved"`
+	RejectionLog  *[]*RejectionResponse `bson:"rejection_log" json:"rejectionLog"`
+	Content       string                `bson:"content" json:"content"`
+	Source        SourceResponse        `bson:"source" json:"source"`
+	Category      DefinitionCategory    `bson:"category" json:"category"`
+	Status        DefinitionStatus      `bson:"status" json:"status"`
+}
+
+type DefinitionResponse struct {
+	ID            primitive.ObjectID `bson:"_id" json:"id"`
+	SubmittedBy   string             `bson:"submitted_by" json:"submittedBy"` // user name instead of id
+	SubmittedDate time.Time          `bson:"submitted_date" json:"submittedDate"`
+	Content       string             `bson:"content" json:"content"`
+	Source        SourceResponse     `bson:"source" json:"source"`
+	Category      DefinitionCategory `bson:"category" json:"category"`
+}
+
 type Definition struct {
 	ID             primitive.ObjectID `bson:"_id" json:"id"`
 	SubmittedBy    string             `bson:"submitted_by" json:"submittedBy"`
@@ -19,30 +42,67 @@ type Definition struct {
 	ApprovedDate   *time.Time         `bson:"approved_date" json:"approvedDate"`
 	Approved       bool               `bson:"approved" json:"approved"`
 	RejectionLog   *[]*Rejection      `bson:"rejection_log" json:"-"`
-	Title          string             `bson:"title" json:"title"`
 	Content        string             `bson:"content" json:"content"`
 	Source         primitive.ObjectID `bson:"source" json:"source"`
-	PublishingDate time.Time          `bson:"publishing_date" json:"publishingDate"`
 	Category       DefinitionCategory `bson:"category" json:"category"`
-}
-
-type Rejection struct {
-	ID           primitive.ObjectID `bson:"_id" json:"-"`
-	RejectedBy   string             `bson:"rejected_by" json:"rejectedBy" validate:"required"`
-	RejectedDate time.Time          `bson:"rejected_date" json:"rejectedDate" validate:"required"`
-	Content      string             `bson:"content" json:"content" validate:"required"`
 }
 
 func (definition *Definition) IsApproved() bool {
 	return definition.ApprovedBy != nil && definition.ApprovedDate != nil
 }
 
+func (definition *Definition) GetStatus() DefinitionStatus {
+
+	if definition.Approved {
+		return EnumDefinitionStatus.Approved
+	}
+
+	if len(*definition.RejectionLog) == 0 {
+		return EnumDefinitionStatus.Pending
+	}
+
+	latestRejectionDate := definition.GetLatestRejection()
+
+	// user submitted new change, that was not approved/rejected yet
+	if !latestRejectionDate.IsZero() && latestRejectionDate.Before(definition.LastChangeDate) {
+		return EnumDefinitionStatus.Pending
+	}
+
+	return EnumDefinitionStatus.Declined
+
+}
+
+func (definition *Definition) GetLatestRejection() time.Time {
+
+	var latestRejectionDate time.Time
+	for _, d := range *definition.RejectionLog {
+		if d.RejectedDate.After(latestRejectionDate) {
+			latestRejectionDate = d.RejectedDate
+		}
+	}
+
+	return latestRejectionDate
+
+}
+
+type RejectionResponse struct {
+	ID           primitive.ObjectID `bson:"_id" json:"id"`
+	RejectedBy   string             `bson:"rejected_by" json:"rejectedBy" validate:"required"` // user name instead of id
+	RejectedDate time.Time          `bson:"rejected_date" json:"rejectedDate" validate:"required"`
+	Content      string             `bson:"content" json:"content" validate:"required"`
+}
+
+type Rejection struct {
+	ID           primitive.ObjectID `bson:"_id" json:"id"`
+	RejectedBy   string             `bson:"rejected_by" json:"rejectedBy" validate:"required"`
+	RejectedDate time.Time          `bson:"rejected_date" json:"rejectedDate" validate:"required"`
+	Content      string             `bson:"content" json:"content" validate:"required"`
+}
+
 type SubmitDefinitionRequest struct {
-	Title          string             `json:"title" validate:"required,min=1"`
-	Content        string             `json:"content" validate:"required,min=1"`
-	SourceId       string             `json:"sourceId" validate:"required"`
-	PublishingDate time.Time          `json:"publishingDate" validate:"required"`
-	Category       DefinitionCategory `json:"category" validate:"required,is-definition-category"`
+	Content  string             `json:"content" validate:"required,min=1"`
+	SourceId string             `json:"sourceId" validate:"required"`
+	Category DefinitionCategory `json:"category" validate:"required,is-definition-category"`
 }
 
 func (request *SubmitDefinitionRequest) Validate(validate *validator.Validate) []string {
@@ -62,7 +122,6 @@ type DefinitionPageRequest struct {
 	PageSize int               `json:"pageSize" validate:"required,min=1"`
 	Page     int               `json:"page" validate:"required,min=1"`
 	Filter   *DefinitionFilter `json:"filter" validate:"omitempty,dive"`
-	Sort     *interface{}      `json:"sort"`
 }
 
 func (request *DefinitionPageRequest) Validate(validate *validator.Validate) []string {
@@ -79,12 +138,10 @@ func (request *RejectRequest) Validate(validate *validator.Validate) []string {
 }
 
 type ChangeDefinitionRequest struct {
-	ID             *string             `json:"id" validate:"required"`
-	Title          *string             `json:"title" validate:"omitempty,min=1"`
-	Content        *string             `json:"content" validate:"omitempty,min=1"`
-	SourceId       *string             `json:"sourceId" validate:"omitempty,min=1"`
-	PublishingDate *time.Time          `json:"publishingDate" validate:"omitempty"`
-	Category       *DefinitionCategory `json:"category" validate:"omitempty,is-definition-category"`
+	ID       *string             `json:"id" validate:"required"`
+	Content  *string             `json:"content" validate:"omitempty,min=1"`
+	SourceId *string             `json:"sourceId" validate:"omitempty,min=1"`
+	Category *DefinitionCategory `json:"category" validate:"omitempty,is-definition-category"`
 }
 
 func (request *ChangeDefinitionRequest) Validate(validate *validator.Validate) []string {
@@ -92,11 +149,12 @@ func (request *ChangeDefinitionRequest) Validate(validate *validator.Validate) [
 }
 
 type DefinitionFilter struct {
-	Approved        bool                  `json:"approved" bson:"approved" validate:"omitempty"`
+	Approved        *bool                 `json:"approved" bson:"approved" validate:"omitempty"`
 	Content         *string               `json:"content" bson:"content" validate:"omitempty,min=1"`
 	Categories      *[]DefinitionCategory `json:"categories" bson:"categories" validate:"omitempty,dive,is-definition-category"`
 	AuthorIds       *[]string             `json:"authors" bson:"authors" validate:"omitempty,min=1"`
 	PublishingYears *[]int                `json:"publishingYears" bson:"publishing_years" validate:"omitempty,min=1"`
+	UserId          *string               `json:"userId" bson:"user_id" validate:"omitempty,min=1"`
 }
 
 type DefinitionCategory string
@@ -149,6 +207,49 @@ func (definitionCategory DefinitionCategory) String() string {
 	case EnumDefinitionCategory.AlienIntelligence:
 		return "alien_intelligence"
 
+	}
+	return "unknown"
+}
+
+type DefinitionStatus string
+
+type definitionStatusList struct {
+	Unknown  DefinitionStatus
+	Approved DefinitionStatus
+	Pending  DefinitionStatus
+	Declined DefinitionStatus
+}
+
+var EnumDefinitionStatus = &definitionStatusList{
+	Unknown:  "unknown",
+	Approved: "approved",
+	Pending:  "pending",
+	Declined: "declined",
+}
+
+var definitionStatusMap = map[string]DefinitionStatus{
+	"approved": EnumDefinitionStatus.Approved,
+	"pending":  EnumDefinitionStatus.Pending,
+	"declined": EnumDefinitionStatus.Declined,
+}
+
+func ParseStringToDefinitionStatus(str string) (DefinitionStatus, error) {
+	definitionStatus, ok := definitionStatusMap[strings.ToLower(str)]
+	if ok {
+		return definitionStatus, nil
+	} else {
+		return definitionStatus, constants.ErrorInvalidEnum
+	}
+}
+
+func (definitionStatus DefinitionStatus) String() string {
+	switch definitionStatus {
+	case EnumDefinitionStatus.Approved:
+		return "approved"
+	case EnumDefinitionStatus.Pending:
+		return "pending"
+	case EnumDefinitionStatus.Declined:
+		return "declined"
 	}
 	return "unknown"
 }

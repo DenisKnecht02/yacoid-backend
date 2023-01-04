@@ -8,14 +8,6 @@ import (
 	"yacoid_server/database"
 )
 
-// next steps: get source and author by id, sort
-
-/*
-
-	TODO: env variable validation (required, defaults)
-
-*/
-
 func main() {
 
 	err := common.LoadEnvironmentVariables()

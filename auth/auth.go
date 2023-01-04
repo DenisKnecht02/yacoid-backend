@@ -82,6 +82,16 @@ func GetUserByContext(ctx *fiber.Ctx) (*authorizer.User, error) {
 
 }
 
+func GetNicknameOfUser(userId string) (string, error) {
+	// TODO
+	return "", constants.ErrorUserNotFound
+}
+
+func GetUser(userId string) (*authorizer.User, error) {
+	// TODO
+	return nil, constants.ErrorUserNotFound
+}
+
 func Authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]interface{}, error) {
 
 	token, err := GetAuthorizationToken(ctx)

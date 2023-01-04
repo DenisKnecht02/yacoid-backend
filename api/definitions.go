@@ -24,8 +24,14 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
+		response, err := database.DefinitionToResponse(definition)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
 		return ctx.JSON(Response{
-			Data: bson.M{"definition": definition},
+			Data: bson.M{"definition": response},
 		})
 
 	})
@@ -60,7 +66,7 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 		return ctx.JSON(Response{
 			Message: "Successfully created definition!",
 			Data: bson.M{
-				"definitonId": definition.Hex(),
+				"definitionId": definition.Hex(),
 			},
 		})
 	})
@@ -161,9 +167,15 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
+		responses, err := database.DefinitionsToResponses(&definitions)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
 		return ctx.JSON(Response{
 			Data: bson.M{
-				"definitions": definitions,
+				"definitions": responses,
 			},
 		})
 
@@ -189,7 +201,6 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			request.Filter = &types.DefinitionFilter{}
 		}
 
-		request.Filter.Approved = true
 		count, err := database.GetDefinitionPageCount(request)
 
 		if err != nil {
@@ -224,8 +235,28 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			request.Filter = &types.DefinitionFilter{}
 		}
 
-		request.Filter.Approved = true
 		definitions, err := database.GetDefinitions(request)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		var responses interface{}
+
+		// if the user wants to see his own definitions, they will have more information in it
+		if request.Filter.UserId != nil && len(*request.Filter.UserId) > 0 {
+
+			id, err := auth.AuthenticateAndGetId(ctx)
+
+			if err == nil && id == *request.Filter.UserId {
+				responses, err = database.DefinitionsToUserResponses(&definitions)
+			} else {
+				responses, err = database.DefinitionsToResponses(&definitions)
+			}
+
+		} else {
+			responses, err = database.DefinitionsToResponses(&definitions)
+		}
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
@@ -233,7 +264,7 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 
 		return ctx.JSON(Response{
 			Data: bson.M{
-				"definitions": definitions,
+				"definitions": responses,
 			},
 		})
 

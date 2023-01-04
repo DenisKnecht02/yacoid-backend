@@ -14,6 +14,28 @@ import (
 
 func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 
+	(*api).Get("/source", func(ctx *fiber.Ctx) error {
+
+		id := ctx.Query("id")
+
+		source, err := database.GetSourceById(id)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		response, err := database.SourceToResponse(source)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
+		return ctx.JSON(Response{
+			Data: bson.M{"source": response},
+		})
+
+	})
+
 	(*api).Post("/", func(ctx *fiber.Ctx) error {
 
 		request := new(types.CreateSourceRequest)
@@ -174,9 +196,15 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
 		}
 
+		responses, err := database.SourcesToResponses(&sources)
+
+		if err != nil {
+			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		}
+
 		return ctx.JSON(Response{
 			Data: bson.M{
-				"sources": sources,
+				"sources": responses,
 			},
 		})
 

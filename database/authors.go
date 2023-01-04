@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+	"yacoid_server/auth"
 	"yacoid_server/common"
 	"yacoid_server/constants"
 	"yacoid_server/types"
@@ -16,6 +17,48 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+func AuthorToResponse(author *types.Author) (*types.AuthorResponse, error) {
+
+	response := types.AuthorResponse{}
+	response.ID = author.ID
+	response.SlugId = author.SlugId
+
+	nickname, err := auth.GetNicknameOfUser(author.SubmittedBy)
+
+	if err == nil {
+		response.SubmittedBy = nickname
+	} else {
+		response.SubmittedBy = "<deleted>"
+	}
+
+	response.SubmittedDate = author.SubmittedDate
+	response.Type = author.Type
+	response.PersonProperties = author.PersonProperties
+	response.OrganizationProperties = author.OrganizationProperties
+
+	return &response, nil
+
+}
+
+func AuthorsToResponses(authors *[]*types.Author) (*[]types.AuthorResponse, error) {
+
+	responses := []types.AuthorResponse{}
+
+	for _, author := range *authors {
+
+		response, err := AuthorToResponse(author)
+
+		if err != nil {
+			return nil, err
+		}
+
+		responses = append(responses, *response)
+	}
+
+	return &responses, nil
+
+}
 
 func CreateAuthor(request *types.CreateAuthorRequest, userId string) (*primitive.ObjectID, error) {
 
@@ -228,7 +271,7 @@ func ApproveAuthors(authorIds []primitive.ObjectID, userId string) error {
 
 }
 
-func GetAuthors(pageSize int, page int, definitionFilter *types.AuthorFilter, sort *interface{}) ([]*types.Author, error) {
+func GetAuthors(pageSize int, page int, definitionFilter *types.AuthorFilter) ([]*types.Author, error) {
 
 	if pageSize <= 0 || page <= 0 {
 		return nil, constants.ErrorInvalidType
@@ -236,15 +279,10 @@ func GetAuthors(pageSize int, page int, definitionFilter *types.AuthorFilter, so
 
 	options := options.FindOptions{}
 
-	if sort != nil {
-		options.SetSort(*sort)
-	}
 	options.SetLimit(int64(pageSize))
 	options.SetSkip(int64((page - 1) * pageSize))
 
 	filter := CreateAuthorFilterQuery(definitionFilter)
-	fmt.Println("FILTER_QUERY")
-	fmt.Println(filter)
 	return getDocuments[types.Author](authorsCollection, filter, &options)
 
 }
@@ -321,6 +359,21 @@ func GetAuthor(id primitive.ObjectID) (*types.Author, error) {
 	}
 
 	return &author, nil
+
+}
+
+func GetAuthorsByIds(ids *[]primitive.ObjectID) (*[]*types.Author, error) {
+
+	filter := bson.M{"_id": bson.D{{Key: "$in", Value: *ids}}}
+
+	options := options.FindOptions{}
+	authors, err := getDocuments[types.Author](authorsCollection, filter, &options)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &authors, nil
 
 }
 

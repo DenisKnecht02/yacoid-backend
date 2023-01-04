@@ -10,8 +10,18 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type AuthorResponse struct {
+	ID                     primitive.ObjectID      `bson:"_id" json:"id"`
+	SlugId                 string                  `bson:"slug_id" json:"slugId"`
+	SubmittedBy            string                  `bson:"submitted_by" json:"submittedBy"` // user name instead of id
+	SubmittedDate          time.Time               `bson:"submitted_date" json:"submittedDate"`
+	Type                   AuthorType              `bson:"type" json:"type" validate:"required,is-author-type"`
+	PersonProperties       *PersonProperties       `bson:"person_properties" json:"personProperties" validate:"required_without=OrganizationProperties,omitempty,dive"`
+	OrganizationProperties *OrganizationProperties `bson:"organization_properties" json:"organizationProperties" validate:"required_without=PersonProperties,omitempty,dive"`
+}
+
 type Author struct {
-	ID                     primitive.ObjectID      `bson:"_id" json:"-"`
+	ID                     primitive.ObjectID      `bson:"_id" json:"id"`
 	SlugId                 string                  `bson:"slug_id" json:"slugId"`
 	SubmittedBy            string                  `bson:"submitted_by" json:"submittedBy"`
 	SubmittedDate          time.Time               `bson:"submitted_date" json:"submittedDate"`
@@ -89,7 +99,6 @@ type AuthorPageRequest struct {
 	PageSize int           `json:"pageSize" validate:"required,min=1"`
 	Page     int           `json:"page" validate:"required,min=1"`
 	Filter   *AuthorFilter `json:"filter" validate:"omitempty,dive"`
-	Sort     *interface{}  `json:"sort"`
 }
 
 func (request *AuthorPageRequest) Validate(validate *validator.Validate) []string {

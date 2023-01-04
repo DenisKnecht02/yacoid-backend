@@ -1,9 +1,9 @@
 package database
 
 import (
-	"fmt"
 	"time"
 
+	"yacoid_server/auth"
 	"yacoid_server/common"
 	"yacoid_server/constants"
 	"yacoid_server/types"
@@ -13,6 +13,160 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+func DefinitionToUserResponse(definition *types.Definition) (*types.DefinitionsOfUserResponse, error) {
+
+	response := types.DefinitionsOfUserResponse{}
+
+	response.ID = definition.ID
+
+	nickname, err := auth.GetNicknameOfUser(definition.SubmittedBy)
+
+	if err == nil {
+		response.SubmittedBy = nickname
+	} else {
+		response.SubmittedBy = "<deleted>"
+	}
+
+	response.SubmittedDate = definition.SubmittedDate
+
+	response.ApprovedBy = definition.ApprovedBy
+	response.ApprovedDate = definition.ApprovedDate
+	response.Approved = definition.Approved
+
+	response.RejectionLog = RejectionsToResponses(definition.RejectionLog)
+	response.Content = definition.Content
+
+	source, err := GetSource(definition.Source)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sourceResponse, err := SourceToResponse(source)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response.Source = *sourceResponse
+	response.Category = definition.Category
+
+	response.Status = definition.GetStatus()
+
+	return &response, nil
+
+}
+
+func DefinitionsToUserResponses(definitions *[]*types.Definition) (*[]types.DefinitionsOfUserResponse, error) {
+
+	responses := []types.DefinitionsOfUserResponse{}
+
+	for _, definition := range *definitions {
+
+		response, err := DefinitionToUserResponse(definition)
+
+		if err != nil {
+			return nil, err
+		}
+
+		responses = append(responses, *response)
+	}
+
+	return &responses, nil
+
+}
+
+func DefinitionToResponse(definition *types.Definition) (*types.DefinitionResponse, error) {
+
+	response := types.DefinitionResponse{}
+
+	response.ID = definition.ID
+
+	nickname, err := auth.GetNicknameOfUser(definition.SubmittedBy)
+
+	if err == nil {
+		response.SubmittedBy = nickname
+	} else {
+		response.SubmittedBy = "<deleted>"
+	}
+
+	response.SubmittedDate = definition.SubmittedDate
+	response.Content = definition.Content
+
+	source, err := GetSource(definition.Source)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sourceResponse, err := SourceToResponse(source)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response.Source = *sourceResponse
+	response.Category = definition.Category
+
+	return &response, nil
+
+}
+
+func DefinitionsToResponses(definitions *[]*types.Definition) (*[]types.DefinitionResponse, error) {
+
+	responses := []types.DefinitionResponse{}
+
+	for _, definition := range *definitions {
+
+		response, err := DefinitionToResponse(definition)
+
+		if err != nil {
+			return nil, err
+		}
+
+		responses = append(responses, *response)
+	}
+
+	return &responses, nil
+
+}
+
+func RejectionToResponse(rejection *types.Rejection) *types.RejectionResponse {
+
+	response := types.RejectionResponse{}
+
+	response.ID = rejection.ID
+
+	nickname, err := auth.GetNicknameOfUser(rejection.RejectedBy)
+
+	if err == nil {
+		response.RejectedBy = nickname
+	} else {
+		response.RejectedBy = "<deleted>"
+	}
+
+	response.RejectedDate = rejection.RejectedDate
+
+	response.Content = rejection.Content
+
+	return &response
+
+}
+
+func RejectionsToResponses(rejections *[]*types.Rejection) *[]*types.RejectionResponse {
+
+	responses := []*types.RejectionResponse{}
+
+	for _, rejection := range *rejections {
+
+		response := RejectionToResponse(rejection)
+		responses = append(responses, response)
+	}
+
+	return &responses
+
+}
 
 func SubmitDefinition(request *types.SubmitDefinitionRequest, userId string) (*primitive.ObjectID, error) {
 
@@ -27,10 +181,8 @@ func SubmitDefinition(request *types.SubmitDefinitionRequest, userId string) (*p
 	definition.ApprovedDate = nil
 	definition.Approved = false
 
-	definition.Title = request.Title
 	definition.Content = request.Content
 	definition.Category = request.Category
-	definition.PublishingDate = request.PublishingDate
 
 	sourceId, err := primitive.ObjectIDFromHex(request.SourceId)
 
@@ -80,7 +232,7 @@ func ApproveDefinition(definitionId string, userId string) error {
 
 	err = ApproveSource(definition.Source, userId)
 
-	if err != nil {
+	if err != nil && err != constants.ErrorSourceAlreadyApproved {
 		return err
 	}
 
@@ -133,12 +285,7 @@ func RejectDefinition(definitionId string, content string, userId string) error 
 		Content:      content,
 	}
 
-	var latestRejectionDate time.Time
-	for _, d := range *definition.RejectionLog {
-		if d.RejectedDate.After(latestRejectionDate) {
-			latestRejectionDate = d.RejectedDate
-		}
-	}
+	latestRejectionDate := definition.GetLatestRejection()
 
 	if !latestRejectionDate.IsZero() && latestRejectionDate.After(definition.LastChangeDate) {
 		return constants.ErrorDefinitionRejectionNotAnsweredYet
@@ -191,9 +338,7 @@ func ChangeDefinition(request *types.ChangeDefinitionRequest, userId string) err
 	filter := bson.M{"_id": id}
 
 	var updateEntries bson.D
-	if request.Title != nil {
-		updateEntries = append(updateEntries, bson.E{Key: "title", Value: request.Title})
-	}
+
 	if request.Content != nil {
 		updateEntries = append(updateEntries, bson.E{Key: "content", Value: request.Content})
 	}
@@ -273,15 +418,10 @@ func GetDefinitions(request *types.DefinitionPageRequest) ([]*types.Definition, 
 
 	options := options.FindOptions{}
 
-	if request.Sort != nil {
-		options.SetSort(*request.Sort)
-	}
 	options.SetLimit(int64(request.PageSize))
 	options.SetSkip(int64((request.Page - 1) * request.PageSize))
 
 	filter := CreateDefinitonFilterQuery(request.Filter)
-	fmt.Println("FILTER_QUERY")
-	fmt.Println(filter)
 	return getDocuments[types.Definition](definitionsCollection, filter, &options)
 
 }
@@ -314,9 +454,14 @@ func CreateDefinitonFilterQuery(filter *types.DefinitionFilter) bson.D {
 		query = append(query, bson.E{Key: "category", Value: bson.D{{Key: "$in", Value: *filter.Categories}}})
 	}
 
-	query = append(query, bson.E{Key: "approved", Value: filter.Approved})
+	if filter.Approved != nil {
+		query = append(query, bson.E{Key: "approved", Value: filter.Approved})
+	}
 
-	// bson.D{{Key: "title", Value: bson.D{{Key: "$regex", Value: primitive.Regex{Pattern: *filter.Title, Options: "i"}}}}}
+	if filter.UserId != nil && len(*filter.UserId) > 0 {
+		query = append(query, bson.E{Key: "submitted_by", Value: filter.UserId})
+	}
+
 	return query
 
 }

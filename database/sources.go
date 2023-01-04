@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"time"
+	"yacoid_server/auth"
 	"yacoid_server/common"
 	"yacoid_server/constants"
 	"yacoid_server/types"
@@ -13,6 +14,63 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+func SourceToResponse(source *types.Source) (*types.SourceResponse, error) {
+
+	response := types.SourceResponse{}
+	response.ID = source.ID
+
+	nickname, err := auth.GetNicknameOfUser(source.SubmittedBy)
+
+	if err == nil {
+		response.SubmittedBy = nickname
+	} else {
+		response.SubmittedBy = "<deleted>"
+	}
+
+	response.SubmittedDate = source.SubmittedDate
+	response.Type = source.Type
+
+	authors, err := GetAuthorsByIds(&source.Authors)
+
+	if err != nil {
+		return nil, err
+	}
+
+	authorResponses, err := AuthorsToResponses(authors)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response.Authors = *authorResponses
+
+	response.BookProperties = source.BookProperties
+	response.JournalProperties = source.JournalProperties
+	response.WebProperties = source.WebProperties
+
+	return &response, nil
+
+}
+
+func SourcesToResponses(sources *[]*types.Source) (*[]types.SourceResponse, error) {
+
+	responses := []types.SourceResponse{}
+
+	for _, source := range *sources {
+
+		response, err := SourceToResponse(source)
+
+		if err != nil {
+			return nil, err
+		}
+
+		responses = append(responses, *response)
+	}
+
+	return &responses, nil
+
+}
 
 func CreateSource(request *types.CreateSourceRequest, userId string) (*primitive.ObjectID, error) {
 
@@ -192,7 +250,7 @@ func ApproveSource(sourceId primitive.ObjectID, userId string) error {
 
 	err = ApproveAuthors(source.Authors, userId)
 
-	if err != nil {
+	if err != nil && err != constants.ErrorAuthorAlreadyApproved {
 		return err
 	}
 
@@ -508,9 +566,6 @@ func GetSources(request *types.SourcePageRequest) ([]*types.Source, error) {
 
 	options := options.FindOptions{}
 
-	if request.Sort != nil {
-		options.SetSort(*request.Sort)
-	}
 	options.SetLimit(int64(request.PageSize))
 	options.SetSkip(int64((request.Page - 1) * request.PageSize))
 
