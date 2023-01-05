@@ -11,26 +11,28 @@ import (
 )
 
 type DefinitionsOfUserResponse struct {
-	ID            primitive.ObjectID    `bson:"_id" json:"id"`
-	SubmittedBy   string                `bson:"submitted_by" json:"submittedBy"` // user name instead of id
-	SubmittedDate time.Time             `bson:"submitted_date" json:"submittedDate"`
-	ApprovedBy    *string               `bson:"approved_by" json:"approvedBy"`
-	ApprovedDate  *time.Time            `bson:"approved_date" json:"approvedDate"`
-	Approved      bool                  `bson:"approved" json:"approved"`
-	RejectionLog  *[]*RejectionResponse `bson:"rejection_log" json:"rejectionLog"`
-	Content       string                `bson:"content" json:"content"`
-	Source        SourceResponse        `bson:"source" json:"source"`
-	Category      DefinitionCategory    `bson:"category" json:"category"`
-	Status        DefinitionStatus      `bson:"status" json:"status"`
+	ID              primitive.ObjectID    `bson:"_id" json:"id"`
+	SubmittedBy     string                `bson:"submitted_by" json:"submittedBy"`
+	SubmittedByName string                `bson:"submitted_by_name" json:"submittedByName"`
+	SubmittedDate   time.Time             `bson:"submitted_date" json:"submittedDate"`
+	ApprovedBy      *string               `bson:"approved_by" json:"approvedBy"`
+	ApprovedDate    *time.Time            `bson:"approved_date" json:"approvedDate"`
+	Approved        bool                  `bson:"approved" json:"approved"`
+	RejectionLog    *[]*RejectionResponse `bson:"rejection_log" json:"rejectionLog"`
+	Content         string                `bson:"content" json:"content"`
+	Source          SourceResponse        `bson:"source" json:"source"`
+	Category        DefinitionCategory    `bson:"category" json:"category"`
+	Status          DefinitionStatus      `bson:"status" json:"status"`
 }
 
 type DefinitionResponse struct {
-	ID            primitive.ObjectID `bson:"_id" json:"id"`
-	SubmittedBy   string             `bson:"submitted_by" json:"submittedBy"` // user name instead of id
-	SubmittedDate time.Time          `bson:"submitted_date" json:"submittedDate"`
-	Content       string             `bson:"content" json:"content"`
-	Source        SourceResponse     `bson:"source" json:"source"`
-	Category      DefinitionCategory `bson:"category" json:"category"`
+	ID              primitive.ObjectID `bson:"_id" json:"id"`
+	SubmittedBy     string             `bson:"submitted_by" json:"submittedBy"`
+	SubmittedByName string             `bson:"submitted_by_name" json:"submittedByName"`
+	SubmittedDate   time.Time          `bson:"submitted_date" json:"submittedDate"`
+	Content         string             `bson:"content" json:"content"`
+	Source          SourceResponse     `bson:"source" json:"source"`
+	Category        DefinitionCategory `bson:"category" json:"category"`
 }
 
 type Definition struct {
@@ -86,10 +88,11 @@ func (definition *Definition) GetLatestRejection() time.Time {
 }
 
 type RejectionResponse struct {
-	ID           primitive.ObjectID `bson:"_id" json:"id"`
-	RejectedBy   string             `bson:"rejected_by" json:"rejectedBy" validate:"required"` // user name instead of id
-	RejectedDate time.Time          `bson:"rejected_date" json:"rejectedDate" validate:"required"`
-	Content      string             `bson:"content" json:"content" validate:"required"`
+	ID             primitive.ObjectID `bson:"_id" json:"id"`
+	RejectedBy     string             `bson:"submitted_by" json:"rejectedBy"`
+	RejectedByName string             `bson:"submitted_by_name" json:"rejectedByName"`
+	RejectedDate   time.Time          `bson:"rejected_date" json:"rejectedDate" validate:"required"`
+	Content        string             `bson:"content" json:"content" validate:"required"`
 }
 
 type Rejection struct {

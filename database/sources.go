@@ -20,12 +20,13 @@ func SourceToResponse(source *types.Source) (*types.SourceResponse, error) {
 	response := types.SourceResponse{}
 	response.ID = source.ID
 
+	response.SubmittedBy = source.SubmittedBy
 	nickname, err := auth.GetNicknameOfUser(source.SubmittedBy)
 
 	if err == nil {
-		response.SubmittedBy = nickname
+		response.SubmittedByName = nickname
 	} else {
-		response.SubmittedBy = "<deleted>"
+		response.SubmittedByName = "<deleted>"
 	}
 
 	response.SubmittedDate = source.SubmittedDate

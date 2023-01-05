@@ -20,12 +20,13 @@ func DefinitionToUserResponse(definition *types.Definition) (*types.DefinitionsO
 
 	response.ID = definition.ID
 
+	response.SubmittedBy = definition.SubmittedBy
 	nickname, err := auth.GetNicknameOfUser(definition.SubmittedBy)
 
 	if err == nil {
-		response.SubmittedBy = nickname
+		response.SubmittedByName = nickname
 	} else {
-		response.SubmittedBy = "<deleted>"
+		response.SubmittedByName = "<deleted>"
 	}
 
 	response.SubmittedDate = definition.SubmittedDate
@@ -83,12 +84,13 @@ func DefinitionToResponse(definition *types.Definition) (*types.DefinitionRespon
 
 	response.ID = definition.ID
 
+	response.SubmittedBy = definition.SubmittedBy
 	nickname, err := auth.GetNicknameOfUser(definition.SubmittedBy)
 
 	if err == nil {
-		response.SubmittedBy = nickname
+		response.SubmittedByName = nickname
 	} else {
-		response.SubmittedBy = "<deleted>"
+		response.SubmittedByName = "<deleted>"
 	}
 
 	response.SubmittedDate = definition.SubmittedDate
@@ -138,12 +140,13 @@ func RejectionToResponse(rejection *types.Rejection) *types.RejectionResponse {
 
 	response.ID = rejection.ID
 
+	response.RejectedBy = rejection.RejectedBy
 	nickname, err := auth.GetNicknameOfUser(rejection.RejectedBy)
 
 	if err == nil {
-		response.RejectedBy = nickname
+		response.RejectedByName = nickname
 	} else {
-		response.RejectedBy = "<deleted>"
+		response.RejectedByName = "<deleted>"
 	}
 
 	response.RejectedDate = rejection.RejectedDate

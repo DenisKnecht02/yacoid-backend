@@ -13,7 +13,8 @@ import (
 type AuthorResponse struct {
 	ID                     primitive.ObjectID      `bson:"_id" json:"id"`
 	SlugId                 string                  `bson:"slug_id" json:"slugId"`
-	SubmittedBy            string                  `bson:"submitted_by" json:"submittedBy"` // user name instead of id
+	SubmittedBy            string                  `bson:"submitted_by" json:"submittedBy"`
+	SubmittedByName        string                  `bson:"submitted_by_name" json:"submittedByName"`
 	SubmittedDate          time.Time               `bson:"submitted_date" json:"submittedDate"`
 	Type                   AuthorType              `bson:"type" json:"type" validate:"required,is-author-type"`
 	PersonProperties       *PersonProperties       `bson:"person_properties" json:"personProperties" validate:"required_without=OrganizationProperties,omitempty,dive"`

@@ -24,12 +24,13 @@ func AuthorToResponse(author *types.Author) (*types.AuthorResponse, error) {
 	response.ID = author.ID
 	response.SlugId = author.SlugId
 
+	response.SubmittedBy = author.SubmittedBy
 	nickname, err := auth.GetNicknameOfUser(author.SubmittedBy)
 
 	if err == nil {
-		response.SubmittedBy = nickname
+		response.SubmittedByName = nickname
 	} else {
-		response.SubmittedBy = "<deleted>"
+		response.SubmittedByName = "<deleted>"
 	}
 
 	response.SubmittedDate = author.SubmittedDate

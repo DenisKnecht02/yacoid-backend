@@ -1,7 +1,11 @@
 package auth
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 	"yacoid_server/common"
@@ -83,13 +87,102 @@ func GetUserByContext(ctx *fiber.Ctx) (*authorizer.User, error) {
 }
 
 func GetNicknameOfUser(userId string) (string, error) {
-	// TODO
-	return "", constants.ErrorUserNotFound
+
+	user, err := GetUser(userId)
+
+	if err != nil {
+		return "", err
+	}
+
+	if user.Nickname == nil {
+		return "anonymous", nil
+	}
+
+	return *user.Nickname, nil
 }
 
 func GetUser(userId string) (*authorizer.User, error) {
-	// TODO
-	return nil, constants.ErrorUserNotFound
+
+	query := fmt.Sprintf(
+		`query {_user (params: {
+				id: "%s"
+			}){
+				id
+				email
+				preferred_username
+				email_verified
+				signup_methods
+				given_name
+				family_name
+				middle_name
+				nickname
+				picture
+				gender
+				birthdate
+				phone_number
+				phone_number_verified
+				roles
+				created_at
+				updated_at
+				is_multi_factor_auth_enabled
+			}
+		}`,
+		userId)
+
+	reqBody := map[string]string{
+		"query": query,
+	}
+
+	jsonReq, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	client := http.Client{}
+	httpReq, err := http.NewRequest(http.MethodPost, os.Getenv(constants.EnvAuthUrl)+"/graphql", bytes.NewReader(jsonReq))
+
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-authorizer-admin-secret", os.Getenv(constants.EnvAuthAdminSecret))
+
+	res, err := client.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	resBody := map[string]interface{}{}
+	json.Unmarshal(bodyBytes, &resBody)
+	data, ok := resBody["data"].(map[string]interface{})
+
+	if !ok {
+		return nil, constants.ErrorUserNotFound
+	}
+
+	userData, ok := data["_user"].(map[string]interface{})
+
+	if !ok {
+		return nil, constants.ErrorUserNotFound
+	}
+
+	userBytes, err := json.Marshal(userData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var user authorizer.User
+	json.Unmarshal(userBytes, &user)
+
+	return &user, nil
 }
 
 func Authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]interface{}, error) {

@@ -12,7 +12,8 @@ import (
 
 type SourceResponse struct {
 	ID                primitive.ObjectID `bson:"_id" json:"id"`
-	SubmittedBy       string             `bson:"submitted_by" json:"submittedBy"` // user name instead of id
+	SubmittedBy       string             `bson:"submitted_by" json:"submittedBy"`
+	SubmittedByName   string             `bson:"submitted_by_name" json:"submittedByName"`
 	SubmittedDate     time.Time          `bson:"submitted_date" json:"submittedDate"`
 	PublishingDate    time.Time          `bson:"publishing_date" json:"publishingDate"`
 	Type              SourceType         `bson:"type" json:"type" validate:"required,is-source-type"`
