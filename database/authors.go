@@ -272,7 +272,7 @@ func ApproveAuthors(authorIds []primitive.ObjectID, userId string) error {
 
 }
 
-func GetAuthors(pageSize int, page int, definitionFilter *types.AuthorFilter) ([]*types.Author, error) {
+func GetAuthors(pageSize int, page int, authorFilter *types.AuthorFilter) ([]*types.Author, error) {
 
 	if pageSize <= 0 || page <= 0 {
 		return nil, constants.ErrorInvalidType
@@ -283,7 +283,7 @@ func GetAuthors(pageSize int, page int, definitionFilter *types.AuthorFilter) ([
 	options.SetLimit(int64(pageSize))
 	options.SetSkip(int64((page - 1) * pageSize))
 
-	filter := CreateAuthorFilterQuery(definitionFilter)
+	filter := CreateAuthorFilterQuery(authorFilter)
 	return getDocuments[types.Author](authorsCollection, filter, &options)
 
 }

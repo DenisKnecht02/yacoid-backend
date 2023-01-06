@@ -15,7 +15,6 @@ type SourceResponse struct {
 	SubmittedBy       string             `bson:"submitted_by" json:"submittedBy"`
 	SubmittedByName   string             `bson:"submitted_by_name" json:"submittedByName"`
 	SubmittedDate     time.Time          `bson:"submitted_date" json:"submittedDate"`
-	PublishingDate    time.Time          `bson:"publishing_date" json:"publishingDate"`
 	Type              SourceType         `bson:"type" json:"type" validate:"required,is-source-type"`
 	Authors           []AuthorResponse   `bson:"authors" json:"authors" validate:"required,min=1"`
 	BookProperties    *BookProperties    `bson:"book_properties" json:"bookProperties" validate:"required_without_all=JournalProperties WebProperties,omitempty,dive"`
@@ -68,13 +67,13 @@ type BookProperties struct {
 }
 
 type JournalProperties struct {
+	JournalName      string    `bson:"journal_name" json:"journalName" validate:"required,min=1"`
 	Title            string    `bson:"title" json:"title" validate:"required,min=1"`
 	PublicationDate  time.Time `bson:"publication_date" json:"publicationDate" validate:"omitempty"`
 	PublicationPlace string    `bson:"publication_place" json:"publicationPlace" validate:"omitempty"`
 	PagesFrom        int       `bson:"pages_from" json:"pagesFrom" validate:"omitempty,min=1"`
 	PagesTo          int       `bson:"pages_to" json:"pagesTo" validate:"omitempty,min=1"`
 	DOI              string    `bson:"doi" json:"doi" validate:"omitempty,min=1"`
-	JournalName      string    `bson:"journal_name" json:"journalName" validate:"required,min=1"`
 	Edition          string    `bson:"edition" json:"edition" validate:"omitempty,min=1"`
 	Publisher        string    `bson:"publisher" json:"publisher" validate:"omitempty,min=1"`
 }
