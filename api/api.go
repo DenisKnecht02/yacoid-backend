@@ -173,7 +173,7 @@ func InitErrorCodeMap() {
 
 	ErrorCodeMap[constants.ErrorDefinitionNotFound] = fiber.StatusNotFound
 	ErrorCodeMap[constants.ErrorDefinitionAlreadyApproved] = fiber.StatusBadRequest
-	ErrorCodeMap[constants.ErrorDefinitionRejectionBelongsToAnotherUser] = fiber.StatusUnauthorized
+	ErrorCodeMap[constants.ErrorDefinitionBelongsToAnotherUser] = fiber.StatusUnauthorized
 	ErrorCodeMap[constants.ErrorDefinitionRejectionNotAnsweredYet] = fiber.StatusBadRequest
 	ErrorCodeMap[fiber.ErrUnauthorized] = fiber.StatusUnauthorized
 
