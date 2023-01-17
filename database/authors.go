@@ -272,18 +272,18 @@ func ApproveAuthors(authorIds []primitive.ObjectID, userId string) error {
 
 }
 
-func GetAuthors(pageSize int, page int, authorFilter *types.AuthorFilter) ([]*types.Author, error) {
+func GetAuthors(request *types.AuthorPageRequest) ([]*types.Author, error) {
 
-	if pageSize <= 0 || page <= 0 {
+	if request.PageSize <= 0 || request.Page <= 0 {
 		return nil, constants.ErrorInvalidType
 	}
 
 	options := options.FindOptions{}
 
-	options.SetLimit(int64(pageSize))
-	options.SetSkip(int64((page - 1) * pageSize))
+	options.SetLimit(int64(request.PageSize))
+	options.SetSkip(int64((request.Page - 1) * request.PageSize))
 
-	filter := CreateAuthorFilterQuery(authorFilter)
+	filter := CreateAuthorFilterQuery(request.Filter)
 	return getDocuments[types.Author](authorsCollection, filter, &options)
 
 }
@@ -321,6 +321,10 @@ func CreateAuthorFilterQuery(filter *types.AuthorFilter) bson.D {
 
 	if filter.Types != nil && len(*filter.Types) > 0 {
 		query = append(query, bson.E{Key: "type", Value: bson.D{{Key: "$in", Value: *filter.Types}}})
+	}
+
+	if filter.Approved != nil {
+		query = append(query, bson.E{Key: "approved", Value: filter.Approved})
 	}
 
 	return query

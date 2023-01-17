@@ -605,7 +605,9 @@ func CreateSourceFilterQuery(filter *types.SourceFilter) bson.D {
 		query = append(query, bson.E{Key: "authors", Value: bson.D{{Key: "$in", Value: *filter.AuthorIds}}})
 	}
 
-	query = append(query, bson.E{Key: "approved", Value: filter.Approved})
+	if filter.Approved != nil {
+		query = append(query, bson.E{Key: "approved", Value: filter.Approved})
+	}
 
 	return query
 

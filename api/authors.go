@@ -52,6 +52,10 @@ func AddAuthorsRequests(api *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
+		if request.Filter == nil {
+			request.Filter = &types.AuthorFilter{}
+		}
+
 		count, err := database.GetAuthorPageCount(request)
 
 		if err != nil {
@@ -82,7 +86,11 @@ func AddAuthorsRequests(api *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
-		authors, err := database.GetAuthors(request.PageSize, request.Page, request.Filter)
+		if request.Filter == nil {
+			request.Filter = &types.AuthorFilter{}
+		}
+
+		authors, err := database.GetAuthors(request)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})

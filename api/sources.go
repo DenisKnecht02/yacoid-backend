@@ -158,7 +158,10 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
-		request.Filter.Approved = true
+		if request.Filter == nil {
+			request.Filter = &types.SourceFilter{}
+		}
+
 		count, err := database.GetSourcePageCount(request)
 
 		if err != nil {
@@ -189,7 +192,10 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
-		request.Filter.Approved = true
+		if request.Filter == nil {
+			request.Filter = &types.SourceFilter{}
+		}
+
 		sources, err := database.GetSources(request)
 
 		if err != nil {
