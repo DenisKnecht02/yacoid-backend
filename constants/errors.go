@@ -33,7 +33,7 @@ var ErrorAuthorAlreadyApproved = errors.New("AUTHOR_ALREADY_APPROVED")
 var ErrorSourceAlreadyApproved = errors.New("SOURCE_ALREADY_APPROVED")
 var ErrorDefinitionAlreadyApproved = errors.New("DEFINITION_ALREADY_APPROVED")
 var ErrorDefinitionRejectionNotAnsweredYet = errors.New("DEFINITION_REJECTION_NOT_ANSWERED_YET")
-var ErrorDefinitionRejectionBelongsToAnotherUser = errors.New("DEFINITION_REJECTION_BELONGS_TO_ANOTHER_USER")
+var ErrorDefinitionBelongsToAnotherUser = errors.New("DEFINITION_BELONGS_TO_ANOTHER_USER")
 
 var ErrorNotFound = errors.New("ENTITY_NOT_FOUND")
 var ErrorUserNotFound = errors.New("USER_NOT_FOUND")

@@ -335,7 +335,7 @@ func ChangeDefinition(request *types.ChangeDefinitionRequest, userId string) err
 	}
 
 	if definition.SubmittedBy != userId {
-		return constants.ErrorDefinitionRejectionBelongsToAnotherUser
+		return constants.ErrorDefinitionBelongsToAnotherUser
 	}
 
 	filter := bson.M{"_id": id}
