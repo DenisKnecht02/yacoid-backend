@@ -50,19 +50,19 @@ func GetCurrentQuarterDate() time.Time {
 
 	now := time.Now()
 
-	var quarterTime time.Time
+	var quarterDate time.Time
 
-	if now.Month() <= 3 {
-		quarterTime = time.Date(now.Year(), time.January, 1, 0, 0, 0, 0, now.Location())
-	} else if now.Month() <= 6 {
-		quarterTime = time.Date(now.Year(), time.April, 1, 0, 0, 0, 0, now.Location())
-	} else if now.Month() <= 6 {
-		quarterTime = time.Date(now.Year(), time.July, 1, 0, 0, 0, 0, now.Location())
+	if now.Month() <= time.March {
+		quarterDate = time.Date(now.Year(), time.January, 1, 0, 0, 0, 0, now.Location())
+	} else if now.Month() <= time.June {
+		quarterDate = time.Date(now.Year(), time.April, 1, 0, 0, 0, 0, now.Location())
+	} else if now.Month() <= time.September {
+		quarterDate = time.Date(now.Year(), time.July, 1, 0, 0, 0, 0, now.Location())
 	} else {
-		quarterTime = time.Date(now.Year(), time.October, 1, 0, 0, 0, 0, now.Location())
+		quarterDate = time.Date(now.Year(), time.October, 1, 0, 0, 0, 0, now.Location())
 	}
 
-	return quarterTime
+	return quarterDate
 
 }
 
