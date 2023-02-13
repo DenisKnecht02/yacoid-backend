@@ -442,13 +442,6 @@ func CreateDefinitonFilterQuery(filter *types.DefinitionFilter) bson.D {
 		textSearch = *filter.Content
 	}
 
-	if filter.Content != nil && len(*filter.Content) > 0 {
-		if len(textSearch) > 0 {
-			textSearch += " "
-		}
-		textSearch += *filter.Content
-	}
-
 	if len(textSearch) > 0 {
 		query = append(query, bson.E{Key: "$text", Value: bson.D{{Key: "$search", Value: textSearch}}})
 	}
