@@ -450,6 +450,10 @@ func CreateDefinitonFilterQuery(filter *types.DefinitionFilter) bson.D {
 		query = append(query, bson.E{Key: "category", Value: bson.D{{Key: "$in", Value: *filter.Categories}}})
 	}
 
+	if filter.AuthorIds != nil && len(*filter.AuthorIds) > 0 {
+		query = append(query, bson.E{Key: "authors", Value: bson.D{{Key: "$in", Value: *filter.AuthorIds}}})
+	}
+
 	if filter.Approved != nil {
 		query = append(query, bson.E{Key: "approved", Value: filter.Approved})
 	}
