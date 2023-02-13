@@ -258,14 +258,13 @@ func ApproveAuthors(authorIds []primitive.ObjectID, userId string) error {
 		},
 	}
 
-	var result bson.M
-	updateError := authorsCollection.FindOneAndUpdate(dbContext, filter, update, nil).Decode(&result)
+	_, err := authorsCollection.UpdateMany(dbContext, filter, update, nil)
 
-	if updateError != nil {
-		if updateError == mongo.ErrNoDocuments {
-			return constants.ErrorAuthorNotFound
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil
 		}
-		return updateError
+		return err
 	}
 
 	return nil
