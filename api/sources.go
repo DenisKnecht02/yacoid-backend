@@ -161,6 +161,16 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 		if request.Filter == nil {
 			request.Filter = &types.SourceFilter{}
 		}
+		
+		if request.Filter.Approved != nil && *request.Filter.Approved == false {
+			
+			_, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+			if err != nil {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+			}
+			
+		}
 
 		count, err := database.GetSourcePageCount(request)
 
@@ -194,6 +204,16 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 
 		if request.Filter == nil {
 			request.Filter = &types.SourceFilter{}
+		}
+		
+		if request.Filter.Approved != nil && *request.Filter.Approved == false {
+			
+			_, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+			if err != nil {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+			}
+			
 		}
 
 		sources, err := database.GetSources(request)

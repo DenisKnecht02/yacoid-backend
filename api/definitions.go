@@ -201,6 +201,16 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			request.Filter = &types.DefinitionFilter{}
 		}
 
+		if request.Filter.Approved != nil && *request.Filter.Approved == false {
+			
+			_, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+			if err != nil {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+			}
+			
+		}
+		
 		count, err := database.GetDefinitionPageCount(request)
 
 		if err != nil {
@@ -233,6 +243,16 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 
 		if request.Filter == nil {
 			request.Filter = &types.DefinitionFilter{}
+		}
+		
+		if request.Filter.Approved != nil && *request.Filter.Approved == false {
+			
+			_, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+			if err != nil {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
+			}
+			
 		}
 
 		definitions, err := database.GetDefinitions(request)
