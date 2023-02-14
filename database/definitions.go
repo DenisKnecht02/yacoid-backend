@@ -616,18 +616,93 @@ func getDefinition(filter interface{}, options *options.FindOneOptions) (*types.
 }
 
 func GetDefinitionPageCount(request *types.DefinitionPageCountRequest) (int64, error) {
-	filter, err := CreateDefinitonFilterQuery(0, int64(request.PageSize), request.Filter)
+	filter, err := CreateDefinitionCountFilter(request.Filter)
 
 	if err != nil {
 		return 0, err
 	}
 
 	options := options.AggregateOptions{}
-	definitions, err := aggregateDocuments[types.Definition](definitionsCollection, *filter, &options)
+	response, err := aggregateDocuments[interface{}](definitionsCollection, *filter, &options)
 
 	if err != nil {
 		return 0, err
 	}
 
-	return int64(math.Ceil(float64(len(definitions)) / float64(request.PageSize))), nil
+	metadata := (*response[0]).(primitive.D)
+	metadataContent := metadata.Map()["metadata"].(primitive.A)
+	totalContent := metadataContent[0].(primitive.D)
+	total := totalContent.Map()["total"].(int32)
+
+	return int64(math.Ceil(float64(total) / float64(request.PageSize))), nil
+}
+
+func CreateDefinitionCountFilter(filter *types.DefinitionFilter) (*bson.A, error) {
+
+	pipeline := bson.A{}
+
+	if filter == nil {
+		return &pipeline, nil
+	}
+
+	matchStage := bson.D{}
+
+	textSearch := ""
+	if filter.Content != nil && len(*filter.Content) > 0 {
+		textSearch = *filter.Content
+	}
+
+	if len(textSearch) > 0 {
+		matchStage = append(matchStage, bson.E{Key: "$text", Value: bson.M{"$search": textSearch}})
+	}
+
+	if filter.Categories != nil && len(*filter.Categories) > 0 {
+		matchStage = append(matchStage, bson.E{Key: "category", Value: bson.M{"$in": *filter.Categories}})
+	}
+
+	if filter.Approved != nil {
+		matchStage = append(matchStage, bson.E{Key: "approved", Value: *filter.Approved})
+	}
+
+	if filter.UserId != nil && len(*filter.UserId) > 0 {
+		matchStage = append(matchStage, bson.E{Key: "submitted_by", Value: *filter.UserId})
+	}
+
+	pipeline = append(pipeline, bson.D{
+		{Key: "$match", Value: matchStage},
+	})
+
+	authors, err := stringsToObjectIDs(filter.AuthorIds)
+	if filter.AuthorIds != nil && len(*filter.AuthorIds) > 0 {
+
+		if err != nil {
+			return nil, err
+		}
+
+		lookup := bson.D{
+			{Key: "from", Value: "sources"},
+			{Key: "localField", Value: "source"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "source"},
+		}
+
+		pipeline = append(pipeline, bson.D{{Key: "$lookup", Value: lookup}})
+		pipeline = append(pipeline, bson.D{{Key: "$match", Value: bson.D{{Key: "source.authors", Value: bson.D{{Key: "$in", Value: authors}}}}}})
+
+	}
+
+	pipeline = append(pipeline, bson.D{
+		{Key: "$facet",
+			Value: bson.D{
+				{Key: "metadata",
+					Value: bson.A{
+						bson.D{{Key: "$count", Value: "total"}},
+					},
+				},
+			},
+		},
+	})
+
+	return &pipeline, nil
+
 }
