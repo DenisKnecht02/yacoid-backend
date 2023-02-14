@@ -632,8 +632,15 @@ func GetDefinitionPageCount(request *types.DefinitionPageCountRequest) (int64, e
 
 	metadata := (*response[0]).(primitive.D)
 	metadataContent := metadata.Map()["metadata"].(primitive.A)
-	totalContent := metadataContent[0].(primitive.D)
-	total := totalContent.Map()["total"].(int32)
+
+	var total int32 = 0
+
+	if len(metadataContent) > 0 {
+
+		totalContent := metadataContent[0].(primitive.D)
+		total = totalContent.Map()["total"].(int32)
+
+	}
 
 	return int64(math.Ceil(float64(total) / float64(request.PageSize))), nil
 }
