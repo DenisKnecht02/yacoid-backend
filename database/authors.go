@@ -364,7 +364,11 @@ func GetAuthorsByIds(ids *[]primitive.ObjectID) (*[]*types.Author, error) {
 
 func GetAuthorCount() (int64, error) {
 
-	count, err := authorsCollection.CountDocuments(dbContext, bson.M{}, nil)
+	filter := bson.M{
+		"approved": true,
+	}
+
+	count, err := authorsCollection.CountDocuments(dbContext, filter, nil)
 	return count, err
 
 }
@@ -374,6 +378,7 @@ func GetAuthorCountInCurrentQuarter() (int64, error) {
 	currentQuarterDate := common.GetCurrentQuarterDate()
 
 	filter := bson.M{
+		"approved": true,
 		"submitted_date": bson.M{
 			"$gte": currentQuarterDate,
 		},

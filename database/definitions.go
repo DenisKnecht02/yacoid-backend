@@ -526,6 +526,7 @@ func GetDefinitionCount() (int64, error) {
 	filter := bson.M{
 		"approved": true,
 	}
+
 	count, err := definitionsCollection.CountDocuments(dbContext, filter, nil)
 	return count, err
 

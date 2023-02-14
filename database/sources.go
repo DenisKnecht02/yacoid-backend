@@ -539,7 +539,11 @@ func ChangeSource(request *types.ChangeSourceRequest, userId string, validate *v
 
 func GetSourceCount() (int64, error) {
 
-	count, err := sourcesCollection.CountDocuments(dbContext, bson.M{}, nil)
+	filter := bson.M{
+		"approved": true,
+	}
+
+	count, err := sourcesCollection.CountDocuments(dbContext, filter, nil)
 	return count, err
 
 }
@@ -549,6 +553,7 @@ func GetSourceCountInCurrentQuarter() (int64, error) {
 	currentQuarterDate := common.GetCurrentQuarterDate()
 
 	filter := bson.M{
+		"approved": true,
 		"submitted_date": bson.M{
 			"$gte": currentQuarterDate,
 		},
