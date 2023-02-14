@@ -496,7 +496,7 @@ func ChangeSource(request *types.ChangeSourceRequest, userId string, validate *v
 
 		if request.WebProperties.PublicationDate != nil {
 			fmt.Printf("Changed \"PublicationDate\" from \"%s\" to \"%s\"\n", source.WebProperties.PublicationDate, *request.WebProperties.PublicationDate)
-			source.WebProperties.PublicationDate = *request.WebProperties.PublicationDate
+			source.WebProperties.PublicationDate = request.WebProperties.PublicationDate
 			changed = true
 		}
 

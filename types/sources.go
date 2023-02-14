@@ -79,11 +79,11 @@ type JournalProperties struct {
 }
 
 type WebProperties struct {
-	ArticleName     string    `bson:"article_name" json:"articleName" validate:"required,min=1"`
-	URL             string    `bson:"url" json:"url" validate:"required,url"`
-	WebsiteName     string    `bson:"website_name" json:"websiteName" validate:"required,min=1"`
-	AccessDate      time.Time `bson:"access_date" json:"accessDate" validate:"required"`
-	PublicationDate time.Time `bson:"publication_date" json:"publicationDate" validate:"omitempty"`
+	ArticleName     string     `bson:"article_name" json:"articleName" validate:"required,min=1"`
+	URL             string     `bson:"url" json:"url" validate:"required,url"`
+	WebsiteName     string     `bson:"website_name" json:"websiteName" validate:"required,min=1"`
+	AccessDate      time.Time  `bson:"access_date" json:"accessDate" validate:"required"`
+	PublicationDate *time.Time `bson:"publication_date" json:"publicationDate" validate:"omitempty"`
 }
 
 type CreateSourceRequest struct {
