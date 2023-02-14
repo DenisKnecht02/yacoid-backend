@@ -54,28 +54,28 @@ func (object *Source) Validate(validate *validator.Validate) []string {
 }
 
 type BookProperties struct {
-	Title            string    `bson:"title" json:"title" validate:"required,min=1"`
-	PublicationDate  time.Time `bson:"publication_date" json:"publicationDate" validate:"omitempty"`
-	PublicationPlace string    `bson:"publication_place" json:"publicationPlace" validate:"omitempty"`
-	PagesFrom        int       `bson:"pages_from" json:"pagesFrom" validate:"omitempty,min=1"`
-	PagesTo          int       `bson:"pages_to" json:"pagesTo" validate:"omitempty,min=1"`
-	Edition          string    `bson:"edition" json:"edition" validate:"omitempty,min=1"`
-	Publisher        string    `bson:"publisher" json:"publisher" validate:"omitempty,min=1"`
-	ISBN             string    `bson:"isbn" json:"isbn" validate:"omitempty,isbn"`
-	EAN              string    `bson:"ean" json:"ean" validate:"omitempty,min=1"`
-	DOI              string    `bson:"doi" json:"doi" validate:"omitempty,min=1"`
+	Title            string     `bson:"title" json:"title" validate:"required,min=1"`
+	PublicationDate  *time.Time `bson:"publication_date" json:"publicationDate" validate:"omitempty"`
+	PublicationPlace string     `bson:"publication_place" json:"publicationPlace" validate:"omitempty"`
+	PagesFrom        int        `bson:"pages_from" json:"pagesFrom" validate:"omitempty,min=1"`
+	PagesTo          int        `bson:"pages_to" json:"pagesTo" validate:"omitempty,min=1"`
+	Edition          string     `bson:"edition" json:"edition" validate:"omitempty,min=1"`
+	Publisher        string     `bson:"publisher" json:"publisher" validate:"omitempty,min=1"`
+	ISBN             string     `bson:"isbn" json:"isbn" validate:"omitempty,isbn"`
+	EAN              string     `bson:"ean" json:"ean" validate:"omitempty,min=1"`
+	DOI              string     `bson:"doi" json:"doi" validate:"omitempty,min=1"`
 }
 
 type JournalProperties struct {
-	JournalName      string    `bson:"journal_name" json:"journalName" validate:"required,min=1"`
-	Title            string    `bson:"title" json:"title" validate:"required,min=1"`
-	PublicationDate  time.Time `bson:"publication_date" json:"publicationDate" validate:"omitempty"`
-	PublicationPlace string    `bson:"publication_place" json:"publicationPlace" validate:"omitempty"`
-	PagesFrom        int       `bson:"pages_from" json:"pagesFrom" validate:"omitempty,min=1"`
-	PagesTo          int       `bson:"pages_to" json:"pagesTo" validate:"omitempty,min=1"`
-	DOI              string    `bson:"doi" json:"doi" validate:"omitempty,min=1"`
-	Edition          string    `bson:"edition" json:"edition" validate:"omitempty,min=1"`
-	Publisher        string    `bson:"publisher" json:"publisher" validate:"omitempty,min=1"`
+	JournalName      string     `bson:"journal_name" json:"journalName" validate:"required,min=1"`
+	Title            string     `bson:"title" json:"title" validate:"required,min=1"`
+	PublicationDate  *time.Time `bson:"publication_date" json:"publicationDate" validate:"omitempty"`
+	PublicationPlace string     `bson:"publication_place" json:"publicationPlace" validate:"omitempty"`
+	PagesFrom        int        `bson:"pages_from" json:"pagesFrom" validate:"omitempty,min=1"`
+	PagesTo          int        `bson:"pages_to" json:"pagesTo" validate:"omitempty,min=1"`
+	DOI              string     `bson:"doi" json:"doi" validate:"omitempty,min=1"`
+	Edition          string     `bson:"edition" json:"edition" validate:"omitempty,min=1"`
+	Publisher        string     `bson:"publisher" json:"publisher" validate:"omitempty,min=1"`
 }
 
 type WebProperties struct {
