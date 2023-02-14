@@ -46,6 +46,20 @@ func InterfaceArrayToStringArray(dataArray []interface{}) ([]string, error) {
 
 }
 
+func ArrayContainsOr[T comparable](array *[]T, elements ...T) bool {
+
+	for _, item := range *array {
+		for _, element := range elements {
+			if item == element {
+				return true
+			}
+		}
+	}
+
+	return false
+
+}
+
 func GetCurrentQuarterDate() time.Time {
 
 	now := time.Now()

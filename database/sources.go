@@ -588,13 +588,8 @@ func CreateSourceFilterQuery(filter *types.SourceFilter) bson.D {
 		return query
 	}
 
-	textSearch := ""
-	if filter.Title != nil && len(*filter.Title) > 0 {
-		textSearch = *filter.Title
-	}
-
-	if len(textSearch) > 0 {
-		query = append(query, bson.E{Key: "$text", Value: bson.D{{Key: "$search", Value: textSearch}}})
+	if filter.Text != nil && len(*filter.Text) > 0 {
+		query = append(query, bson.E{Key: "$text", Value: bson.D{{Key: "$search", Value: *filter.Text}}})
 	}
 
 	if filter.Types != nil && len(*filter.Types) > 0 {

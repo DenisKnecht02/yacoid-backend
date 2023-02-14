@@ -28,6 +28,10 @@ func main() {
 		panic(fmt.Sprintf("Failed to connect to auth system: %v\n", err))
 	}
 
-	api.StartAPI()
+	err = api.StartAPI()
+	
+	if err != nil {
+		panic(fmt.Sprintf("Failed to connect to auth system: %v\n", err))
+	}
 
 }

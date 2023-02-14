@@ -210,6 +210,6 @@ func (request *SourcePageRequest) Validate(validate *validator.Validate) []strin
 type SourceFilter struct {
 	Approved  *bool         `json:"approved" bson:"approved" validate:"omitempty"`
 	Types     *[]SourceType `json:"types" bson:"types" validate:"omitempty,dive,is-source-type"`
-	Title     *string       `json:"title" bson:"title" validate:"omitempty,min=1"`
+	Text      *string       `json:"text" bson:"text" validate:"omitempty,min=1"`
 	AuthorIds *[]string     `json:"authors" bson:"authors" validate:"omitempty,min=1"`
 }

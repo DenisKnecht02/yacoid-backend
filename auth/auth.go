@@ -185,12 +185,12 @@ func GetUser(userId string) (*authorizer.User, error) {
 	return &user, nil
 }
 
-func Authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]interface{}, error) {
+func authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]interface{}, *[]constants.Role, error) {
 
 	token, err := GetAuthorizationToken(ctx)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	response, err := AuthClient.ValidateJWTToken(&authorizer.ValidateJWTTokenInput{
@@ -199,28 +199,31 @@ func Authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]i
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if !response.IsValid {
-		return nil, constants.ErrorValidation
+		return nil, nil, constants.ErrorValidation
 	}
 
 	roleInterfaceArray, ok := response.Claims["role"].([]interface{})
 
 	if !ok {
-		return nil, constants.ErrorRoleClaimCast
+		return nil, nil, constants.ErrorRoleClaimCast
 	}
 
-	roles, err := common.InterfaceArrayToStringArray(roleInterfaceArray)
-	userRole := constants.RoleUser
-
-	if !slices.Contains(roles, userRole.String()) {
-		roles = append(roles, userRole.String())
-	}
+	rolesAsString, err := common.InterfaceArrayToStringArray(roleInterfaceArray)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+
+	roles, err := constants.StringArrayToRoleArray(rolesAsString)
+
+	userRole := constants.EnumRole.User
+
+	if !slices.Contains(*roles, userRole) {
+		*roles = append(*roles, userRole)
 	}
 
 	if len(requiredRoles) == 0 {
@@ -233,7 +236,7 @@ func Authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]i
 		hasEnoughPermissions = true // no roles required
 	} else {
 		for _, requiredRole := range requiredRoles {
-			if slices.Contains(roles, requiredRole.String()) {
+			if slices.Contains(*roles, requiredRole) {
 				hasEnoughPermissions = true
 				break
 			}
@@ -241,16 +244,16 @@ func Authenticate(ctx *fiber.Ctx, requiredRoles ...constants.Role) (map[string]i
 	}
 
 	if !hasEnoughPermissions {
-		return nil, constants.ErrorNotEnoughPermissions
+		return nil, nil, constants.ErrorNotEnoughPermissions
 	}
 
-	return response.Claims, nil
+	return response.Claims, roles, nil
 
 }
 
 func AuthenticateAndGetId(ctx *fiber.Ctx, roles ...constants.Role) (string, error) {
 
-	claims, err := Authenticate(ctx, roles...)
+	claims, _, err := authenticate(ctx, roles...)
 
 	if err != nil {
 		return "", err
@@ -263,5 +266,23 @@ func AuthenticateAndGetId(ctx *fiber.Ctx, roles ...constants.Role) (string, erro
 	}
 
 	return id, nil
+
+}
+
+func Authenticate(ctx *fiber.Ctx, roles ...constants.Role) (string, *[]constants.Role, error) {
+
+	claims, userRoles, err := authenticate(ctx, roles...)
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	id, ok := claims["id"].(string)
+
+	if !ok {
+		return "", nil, constants.ErrorUserIdCast
+	}
+
+	return id, userRoles, nil
 
 }

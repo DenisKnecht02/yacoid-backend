@@ -3,6 +3,7 @@ package api
 import (
 	"strings"
 	"yacoid_server/auth"
+	"yacoid_server/common"
 	"yacoid_server/constants"
 	"yacoid_server/database"
 	"yacoid_server/types"
@@ -75,7 +76,7 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 
 		definitionId := ctx.Query("id")
 
-		id, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+		id, err := auth.AuthenticateAndGetId(ctx, constants.EnumRole.Moderator, constants.EnumRole.Admin)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
@@ -109,7 +110,7 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			})
 		}
 
-		id, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+		id, err := auth.AuthenticateAndGetId(ctx, constants.EnumRole.Moderator, constants.EnumRole.Admin)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
@@ -201,16 +202,24 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			request.Filter = &types.DefinitionFilter{}
 		}
 
-		if request.Filter.Approved != nil && *request.Filter.Approved == false {
-			
-			_, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+		// user wants to see (only) submitted definitions
+		if request.Filter.Approved == nil || *request.Filter.Approved == false {
+
+			id, roles, err := auth.Authenticate(ctx)
 
 			if err != nil {
 				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
 			}
-			
+
+			// if the user is not an moderator or admin, he can only view unapproved definitions of himself
+			if !common.ArrayContainsOr(roles, constants.EnumRole.Moderator, constants.EnumRole.Admin) {
+				if request.Filter.UserId == nil || *request.Filter.UserId != id {
+					return ctx.Status(GetErrorCode(constants.ErrorNotEnoughPermissions)).JSON(Response{Message: "Authentication failed", Error: constants.ErrorNotEnoughPermissions.Error()})
+				}
+			}
+
 		}
-		
+
 		count, err := database.GetDefinitionPageCount(request)
 
 		if err != nil {
@@ -244,15 +253,23 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 		if request.Filter == nil {
 			request.Filter = &types.DefinitionFilter{}
 		}
-		
-		if request.Filter.Approved != nil && *request.Filter.Approved == false {
-			
-			_, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+		// user wants to see (only) submitted definitions
+		if request.Filter.Approved == nil || *request.Filter.Approved == false {
+
+			id, roles, err := auth.Authenticate(ctx)
 
 			if err != nil {
 				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
 			}
-			
+
+			// if the user is not an moderator or admin, he can only view unapproved definitions of himself
+			if !common.ArrayContainsOr(roles, constants.EnumRole.Moderator, constants.EnumRole.Admin) {
+				if request.Filter.UserId == nil || *request.Filter.UserId != id {
+					return ctx.Status(GetErrorCode(constants.ErrorNotEnoughPermissions)).JSON(Response{Message: "Authentication failed", Error: constants.ErrorNotEnoughPermissions.Error()})
+				}
+			}
+
 		}
 
 		definitions, err := database.GetDefinitions(request)
@@ -264,22 +281,24 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 		var responses interface{}
 
 		// if the user wants to see his own definitions, they will have more information in it
-		if request.Filter.UserId != nil && len(*request.Filter.UserId) > 0 {
+		if request.Filter.UserId != nil {
 
-			id, err := auth.AuthenticateAndGetId(ctx)
+			id, roles, err := auth.Authenticate(ctx)
 
-			if err == nil && id == *request.Filter.UserId {
+			if err == nil && (id == *request.Filter.UserId || common.ArrayContainsOr(roles, constants.EnumRole.Moderator, constants.EnumRole.Admin)) {
 				responses, err = database.DefinitionsToUserResponses(&definitions)
-			} else {
-				responses, err = database.DefinitionsToResponses(&definitions)
 			}
 
-		} else {
-			responses, err = database.DefinitionsToResponses(&definitions)
 		}
 
-		if err != nil {
-			return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+		if responses == nil {
+
+			responses, err = database.DefinitionsToResponses(&definitions)
+
+			if err != nil {
+				return ctx.Status(GetErrorCode(err)).JSON(Response{Error: err.Error()})
+			}
+
 		}
 
 		return ctx.JSON(Response{
@@ -298,7 +317,7 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Definition ID required", Error: err.Error()})
 		}
 
-		_, err = auth.Authenticate(ctx, constants.RoleModerator, constants.RoleAdmin)
+		_, _, err = auth.Authenticate(ctx, constants.EnumRole.Moderator, constants.EnumRole.Admin)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})

@@ -55,15 +55,15 @@ func AddAuthorsRequests(api *fiber.Router, validate *validator.Validate) {
 		if request.Filter == nil {
 			request.Filter = &types.AuthorFilter{}
 		}
-		
-		if request.Filter.Approved != nil && *request.Filter.Approved == false {
-			
-			_, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+		if request.Filter.Approved == nil || *request.Filter.Approved == false {
+
+			_, err := auth.AuthenticateAndGetId(ctx, constants.EnumRole.Moderator, constants.EnumRole.Admin)
 
 			if err != nil {
 				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
 			}
-			
+
 		}
 
 		count, err := database.GetAuthorPageCount(request)
@@ -99,15 +99,15 @@ func AddAuthorsRequests(api *fiber.Router, validate *validator.Validate) {
 		if request.Filter == nil {
 			request.Filter = &types.AuthorFilter{}
 		}
-		
-		if request.Filter.Approved != nil && *request.Filter.Approved == false {
-			
-			_, err := auth.AuthenticateAndGetId(ctx, constants.RoleModerator, constants.RoleAdmin)
+
+		if request.Filter.Approved == nil || *request.Filter.Approved == false {
+
+			_, err := auth.AuthenticateAndGetId(ctx, constants.EnumRole.Moderator, constants.EnumRole.Admin)
 
 			if err != nil {
 				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
 			}
-			
+
 		}
 
 		authors, err := database.GetAuthors(request)
@@ -174,7 +174,7 @@ func AddAuthorsRequests(api *fiber.Router, validate *validator.Validate) {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Author ID required", Error: err.Error()})
 		}
 
-		_, err = auth.Authenticate(ctx, constants.RoleModerator, constants.RoleAdmin)
+		_, _, err = auth.Authenticate(ctx, constants.EnumRole.Moderator, constants.EnumRole.Admin)
 
 		if err != nil {
 			return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})

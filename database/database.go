@@ -52,19 +52,35 @@ func Connect() error {
 	database.CreateCollection(dbContext, "definitions")
 
 	definitionsCollection = database.Collection("definitions")
-	definitionsCollection.Indexes().CreateOne(dbContext, mongo.IndexModel{
+	_, err = definitionsCollection.Indexes().CreateOne(dbContext, mongo.IndexModel{
 		Keys: bson.D{{Key: "title", Value: "text"}, {Key: "content", Value: "text"}},
 	})
 
+	if err != nil {
+		return err
+	}
+
 	authorsCollection = database.Collection("authors")
-	authorsCollection.Indexes().CreateOne(dbContext, mongo.IndexModel{
-		Keys: bson.D{{Key: "first_name", Value: "text"}, {Key: "last_name", Value: "text"}, {Key: "organization_name", Value: "text"}},
+	_, err = authorsCollection.Indexes().CreateOne(dbContext, mongo.IndexModel{
+		Keys: bson.D{{Key: "person_properties.first_name", Value: "text"}, {Key: "person_properties.last_name", Value: "text"}, {Key: "organization_properties.organization_name", Value: "text"}},
 	})
 
+	if err != nil {
+		return err
+	}
+
 	sourcesCollection = database.Collection("sources")
-	sourcesCollection.Indexes().CreateOne(dbContext, mongo.IndexModel{
-		Keys: bson.D{{Key: "title", Value: "text"}},
+	_, err = sourcesCollection.Indexes().CreateOne(dbContext, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "book_properties.title", Value: "text"}, {Key: "book_properties.edition", Value: "text"}, {Key: "book_properties.publisher", Value: "text"},
+			{Key: "journal_properties.journal_name", Value: "text"}, {Key: "journal_properties.title", Value: "text"}, {Key: "journal_properties.edition", Value: "text"}, {Key: "journal_properties.publisher", Value: "text"},
+			{Key: "web_properties.article_name", Value: "text"}, {Key: "web_properties.url", Value: "text"}, {Key: "web_properties.website_name", Value: "text"},
+		},
 	})
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -181,6 +197,11 @@ func getPageCount(collection *mongo.Collection, pageSize int, filter interface{}
 func stringsToObjectIDs(stringIds *[]string) ([]primitive.ObjectID, error) {
 
 	ids := []primitive.ObjectID{}
+
+	if stringIds == nil {
+		return ids, nil
+	}
+
 	for _, stringId := range *stringIds {
 
 		id, idError := primitive.ObjectIDFromHex(stringId)

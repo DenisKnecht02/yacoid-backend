@@ -107,11 +107,9 @@ func (request *AuthorPageRequest) Validate(validate *validator.Validate) []strin
 }
 
 type AuthorFilter struct {
-	Approved         *bool         `json:"approved" bson:"approved" validate:"omitempty"`
-	FirstName        *string       `json:"firstName" validate:"omitempty,min=1"`
-	LastName         *string       `json:"lastName" validate:"omitempty,min=1"`
-	OrganizationName *string       `json:"organizationName" validate:"omitempty,min=1"`
-	Types            *[]AuthorType `json:"types" validate:"omitempty,dive,is-author-type"`
+	Approved *bool         `json:"approved" bson:"approved" validate:"omitempty"`
+	Name     *string       `json:"name" validate:"omitempty,min=1"`
+	Types    *[]AuthorType `json:"types" validate:"omitempty,dive,is-author-type"`
 }
 
 type AuthorType string

@@ -14,7 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-func StartAPI() {
+func StartAPI() error {
 
 	InitErrorCodeMap()
 
@@ -61,7 +61,8 @@ func StartAPI() {
 
 	fmt.Println("Started server on port " + os.Getenv(constants.EnvKeyRestPort))
 
-	app.Listen(":" + os.Getenv(constants.EnvKeyRestPort))
+	err := app.Listen(":" + os.Getenv(constants.EnvKeyRestPort))
+	return err
 
 }
 
@@ -116,7 +117,7 @@ func ValidateDefinitionCategory(fieldLevel validator.FieldLevel) bool {
 func AuthMiddleware(roles ...constants.Role) func(ctx *fiber.Ctx) error {
 	return func(ctx *fiber.Ctx) error {
 
-		_, err := auth.Authenticate(ctx, roles...)
+		_, _, err := auth.Authenticate(ctx, roles...)
 
 		if err != nil {
 			return err
@@ -140,7 +141,7 @@ func GetErrorCode(err error) int {
 	fmt.Printf("[%T] %v\n", err, err)
 
 	/* mongo.CommandError will cause an error if using as map key -> "panic: runtime error: hash of unhashable type mongo.CommandError" */
-	if strings.HasPrefix(err.Error(), "(Location") || strings.HasPrefix(err.Error(), "(BadValue)") || strings.HasPrefix(err.Error(), "(IndexNotFound)") {
+	if strings.HasPrefix(err.Error(), "(FailedToParse)") || strings.HasPrefix(err.Error(), "(Location") || strings.HasPrefix(err.Error(), "(BadValue)") || strings.HasPrefix(err.Error(), "(IndexNotFound)") {
 		// ^-- not "(Location)", because error prefix looks like this: "(Location: Error <number>)"
 		return fiber.StatusInternalServerError
 	}

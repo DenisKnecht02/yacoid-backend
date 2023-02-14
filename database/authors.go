@@ -295,27 +295,8 @@ func CreateAuthorFilterQuery(filter *types.AuthorFilter) bson.D {
 		return query
 	}
 
-	textSearch := ""
-	if filter.FirstName != nil && len(*filter.FirstName) > 0 {
-		textSearch = *filter.FirstName
-	}
-
-	if filter.LastName != nil && len(*filter.LastName) > 0 {
-		if len(textSearch) > 0 {
-			textSearch += " "
-		}
-		textSearch += *filter.LastName
-	}
-
-	if filter.OrganizationName != nil && len(*filter.OrganizationName) > 0 {
-		if len(textSearch) > 0 {
-			textSearch += " "
-		}
-		textSearch += *filter.OrganizationName
-	}
-
-	if len(textSearch) > 0 {
-		query = append(query, bson.E{Key: "$text", Value: bson.D{{Key: "$search", Value: textSearch}}})
+	if filter.Name != nil && len(*filter.Name) > 0 {
+		query = append(query, bson.E{Key: "$text", Value: bson.D{{Key: "$search", Value: *filter.Name}}})
 	}
 
 	if filter.Types != nil && len(*filter.Types) > 0 {

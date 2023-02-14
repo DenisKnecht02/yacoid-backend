@@ -1,6 +1,7 @@
 package database
 
 import (
+	"math"
 	"time"
 
 	"yacoid_server/auth"
@@ -419,23 +420,27 @@ func GetDefinitions(request *types.DefinitionPageRequest) ([]*types.Definition, 
 		return nil, constants.ErrorInvalidType
 	}
 
-	options := options.FindOptions{}
+	options := options.AggregateOptions{}
 
-	options.SetLimit(int64(request.PageSize))
-	options.SetSkip(int64((request.Page - 1) * request.PageSize))
+	filter, err := CreateDefinitonFilterQuery(int64(request.Page), int64(request.PageSize), request.Filter)
 
-	filter := CreateDefinitonFilterQuery(request.Filter)
-	return getDocuments[types.Definition](definitionsCollection, filter, &options)
+	if err != nil {
+		return nil, err
+	}
+
+	return aggregateDocuments[types.Definition](definitionsCollection, *filter, &options)
 
 }
 
-func CreateDefinitonFilterQuery(filter *types.DefinitionFilter) bson.D {
+func CreateDefinitonFilterQuery(page int64, pageSize int64, filter *types.DefinitionFilter) (*bson.A, error) {
 
-	query := bson.D{}
+	pipeline := bson.A{}
 
 	if filter == nil {
-		return query
+		return &pipeline, nil
 	}
+
+	matchStage := bson.D{}
 
 	textSearch := ""
 	if filter.Content != nil && len(*filter.Content) > 0 {
@@ -443,26 +448,76 @@ func CreateDefinitonFilterQuery(filter *types.DefinitionFilter) bson.D {
 	}
 
 	if len(textSearch) > 0 {
-		query = append(query, bson.E{Key: "$text", Value: bson.D{{Key: "$search", Value: textSearch}}})
+		matchStage = append(matchStage, bson.E{Key: "$text", Value: bson.M{"$search": textSearch}})
 	}
 
 	if filter.Categories != nil && len(*filter.Categories) > 0 {
-		query = append(query, bson.E{Key: "category", Value: bson.D{{Key: "$in", Value: *filter.Categories}}})
-	}
-
-	if filter.AuthorIds != nil && len(*filter.AuthorIds) > 0 {
-		query = append(query, bson.E{Key: "authors", Value: bson.D{{Key: "$in", Value: *filter.AuthorIds}}})
+		matchStage = append(matchStage, bson.E{Key: "category", Value: bson.M{"$in": *filter.Categories}})
 	}
 
 	if filter.Approved != nil {
-		query = append(query, bson.E{Key: "approved", Value: filter.Approved})
+		matchStage = append(matchStage, bson.E{Key: "approved", Value: *filter.Approved})
 	}
 
 	if filter.UserId != nil && len(*filter.UserId) > 0 {
-		query = append(query, bson.E{Key: "submitted_by", Value: filter.UserId})
+		matchStage = append(matchStage, bson.E{Key: "submitted_by", Value: *filter.UserId})
 	}
 
-	return query
+	pipeline = append(pipeline, bson.D{
+		{Key: "$match", Value: matchStage},
+	})
+
+	authors, err := stringsToObjectIDs(filter.AuthorIds)
+	if filter.AuthorIds != nil && len(*filter.AuthorIds) > 0 {
+
+		if err != nil {
+			return nil, err
+		}
+
+		// If we lookup on the source, the orignal source (which is just the ID) will be replaced
+		// with the entire document. To avoid this we will save the original value here and
+		// replace with after lookup.
+		pipeline = append(pipeline, bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "original_source", Value: "$source"},
+			}},
+		})
+
+		lookup := bson.D{
+			{Key: "from", Value: "sources"},
+			{Key: "localField", Value: "source"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "source"},
+		}
+
+		pipeline = append(pipeline, bson.D{{Key: "$lookup", Value: lookup}})
+		pipeline = append(pipeline, bson.D{{Key: "$match", Value: bson.D{{Key: "source.authors", Value: bson.D{{Key: "$in", Value: authors}}}}}})
+
+		// Replace modified source with original source
+		pipeline = append(pipeline, bson.D{
+			{Key: "$addFields", Value: bson.D{
+				{Key: "source", Value: "$original_source"},
+			}},
+		})
+
+		// Remove original source
+		pipeline = append(pipeline, bson.D{
+			{Key: "$project", Value: bson.D{
+				{Key: "original_source", Value: 0},
+			}},
+		})
+
+	}
+
+	if page > 0 && pageSize > 0 {
+		pipeline = append(pipeline, bson.D{{Key: "$skip", Value: int64((page - 1) * pageSize)}})
+	}
+
+	if pageSize > 0 {
+		pipeline = append(pipeline, bson.D{{Key: "$limit", Value: int64(pageSize)}})
+	}
+
+	return &pipeline, nil
 
 }
 
@@ -561,6 +616,18 @@ func getDefinition(filter interface{}, options *options.FindOneOptions) (*types.
 }
 
 func GetDefinitionPageCount(request *types.DefinitionPageCountRequest) (int64, error) {
-	filter := CreateDefinitonFilterQuery(request.Filter)
-	return getPageCount(definitionsCollection, request.PageSize, filter)
+	filter, err := CreateDefinitonFilterQuery(0, int64(request.PageSize), request.Filter)
+
+	if err != nil {
+		return 0, err
+	}
+
+	options := options.AggregateOptions{}
+	definitions, err := aggregateDocuments[types.Definition](definitionsCollection, *filter, &options)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return int64(math.Ceil(float64(len(definitions)) / float64(request.PageSize))), nil
 }
