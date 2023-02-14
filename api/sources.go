@@ -164,7 +164,7 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 
 		if request.Filter.Approved == nil || *request.Filter.Approved == false {
 
-			_, err := auth.AuthenticateAndGetId(ctx, constants.EnumRole.Moderator, constants.EnumRole.Admin)
+			_, err := auth.AuthenticateAndGetId(ctx)
 
 			if err != nil {
 				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
@@ -208,7 +208,7 @@ func AddSourcesRequests(api *fiber.Router, validate *validator.Validate) {
 
 		if request.Filter.Approved == nil || *request.Filter.Approved == false {
 
-			_, err := auth.AuthenticateAndGetId(ctx, constants.EnumRole.Moderator, constants.EnumRole.Admin)
+			_, err := auth.AuthenticateAndGetId(ctx)
 
 			if err != nil {
 				return ctx.Status(GetErrorCode(err)).JSON(Response{Message: "Authentication failed", Error: err.Error()})
