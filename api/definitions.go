@@ -289,6 +289,14 @@ func AddDefinitionRequests(api *fiber.Router, validate *validator.Validate) {
 				responses, err = database.DefinitionsToUserResponses(&definitions)
 			}
 
+		} else if request.AdminInformation != nil && *request.AdminInformation == true {
+
+			_, _, err := auth.Authenticate(ctx, constants.EnumRole.Moderator, constants.EnumRole.Admin)
+
+			if err == nil {
+				responses, err = database.DefinitionsToUserResponses(&definitions)
+			}
+
 		}
 
 		if responses == nil {

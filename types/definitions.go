@@ -122,9 +122,10 @@ func (request *DefinitionPageCountRequest) Validate(validate *validator.Validate
 }
 
 type DefinitionPageRequest struct {
-	PageSize int               `json:"pageSize" validate:"required,min=1"`
-	Page     int               `json:"page" validate:"required,min=1"`
-	Filter   *DefinitionFilter `json:"filter" validate:"omitempty,dive"`
+	PageSize         int               `json:"pageSize" validate:"required,min=1"`
+	Page             int               `json:"page" validate:"required,min=1"`
+	AdminInformation *bool             `json:"adminInformation" validate:"omitempty"`
+	Filter           *DefinitionFilter `json:"filter" validate:"omitempty,dive"`
 }
 
 func (request *DefinitionPageRequest) Validate(validate *validator.Validate) []string {
