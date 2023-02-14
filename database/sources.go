@@ -342,7 +342,7 @@ func ChangeSource(request *types.ChangeSourceRequest, userId string, validate *v
 
 		if request.BookProperties.PublicationDate != nil {
 			fmt.Printf("Changed \"PublicationDate\" from \"%s\" to \"%s\"\n", source.BookProperties.PublicationDate, *request.BookProperties.PublicationDate)
-			source.BookProperties.PublicationDate = *request.BookProperties.PublicationDate
+			source.BookProperties.PublicationDate = request.BookProperties.PublicationDate
 			changed = true
 		}
 
@@ -416,7 +416,7 @@ func ChangeSource(request *types.ChangeSourceRequest, userId string, validate *v
 
 		if request.JournalProperties.PublicationDate != nil {
 			fmt.Printf("Changed \"PublicationDate\" from \"%s\" to \"%s\"\n", source.JournalProperties.PublicationDate, *request.JournalProperties.PublicationDate)
-			source.JournalProperties.PublicationDate = *request.JournalProperties.PublicationDate
+			source.JournalProperties.PublicationDate = request.JournalProperties.PublicationDate
 			changed = true
 		}
 
