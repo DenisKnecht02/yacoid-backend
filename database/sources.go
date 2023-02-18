@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"time"
 	"yacoid_server/auth"
 	"yacoid_server/common"
@@ -335,61 +334,51 @@ func ChangeSource(request *types.ChangeSourceRequest, userId string, validate *v
 		}
 
 		if request.BookProperties.Title != nil {
-			fmt.Printf("Changed \"Title\" from \"%s\" to \"%s\"\n", source.BookProperties.Title, *request.BookProperties.Title)
 			source.BookProperties.Title = *request.BookProperties.Title
 			changed = true
 		}
 
 		if request.BookProperties.PublicationDate != nil {
-			fmt.Printf("Changed \"PublicationDate\" from \"%s\" to \"%s\"\n", source.BookProperties.PublicationDate, *request.BookProperties.PublicationDate)
 			source.BookProperties.PublicationDate = request.BookProperties.PublicationDate
 			changed = true
 		}
 
 		if request.BookProperties.PublicationPlace != nil {
-			fmt.Printf("Changed \"PublicationPlace\" from \"%s\" to \"%s\"\n", source.BookProperties.PublicationPlace, *request.BookProperties.PublicationPlace)
 			source.BookProperties.PublicationPlace = *request.BookProperties.PublicationPlace
 			changed = true
 		}
 
 		if request.BookProperties.PagesFrom != nil {
-			fmt.Printf("Changed \"PagesFrom\" from \"%v\" to \"%v\"\n", source.BookProperties.PagesFrom, *request.BookProperties.PagesFrom)
 			source.BookProperties.PagesFrom = *request.BookProperties.PagesFrom
 			changed = true
 		}
 
 		if request.BookProperties.PagesTo != nil {
-			fmt.Printf("Changed \"PagesTo\" from \"%v\" to \"%v\"\n", source.BookProperties.PagesTo, *request.BookProperties.PagesTo)
 			source.BookProperties.PagesTo = *request.BookProperties.PagesTo
 			changed = true
 		}
 
 		if request.BookProperties.Edition != nil {
-			fmt.Printf("Changed \"Edition\" from \"%s\" to \"%s\"\n", source.BookProperties.Edition, *request.BookProperties.Edition)
 			source.BookProperties.Edition = *request.BookProperties.Edition
 			changed = true
 		}
 
 		if request.BookProperties.Publisher != nil {
-			fmt.Printf("Changed \"Publisher\" from \"%s\" to \"%s\"\n", source.BookProperties.Publisher, *request.BookProperties.Publisher)
 			source.BookProperties.Publisher = *request.BookProperties.Publisher
 			changed = true
 		}
 
 		if request.BookProperties.ISBN != nil {
-			fmt.Printf("Changed \"ISBN\" from \"%s\" to \"%s\"\n", source.BookProperties.ISBN, *request.BookProperties.ISBN)
 			source.BookProperties.ISBN = *request.BookProperties.ISBN
 			changed = true
 		}
 
 		if request.BookProperties.EAN != nil {
-			fmt.Printf("Changed \"EAN\" from \"%s\" to \"%s\"\n", source.BookProperties.EAN, *request.BookProperties.EAN)
 			source.BookProperties.EAN = *request.BookProperties.EAN
 			changed = true
 		}
 
 		if request.BookProperties.DOI != nil {
-			fmt.Printf("Changed \"DOI\" from \"%s\" to \"%s\"\n", source.BookProperties.DOI, *request.BookProperties.DOI)
 			source.BookProperties.DOI = *request.BookProperties.DOI
 			changed = true
 		}
@@ -409,55 +398,46 @@ func ChangeSource(request *types.ChangeSourceRequest, userId string, validate *v
 		}
 
 		if request.JournalProperties.Title != nil {
-			fmt.Printf("Changed \"Title\" from \"%s\" to \"%s\"\n", source.JournalProperties.Title, *request.JournalProperties.Title)
 			source.JournalProperties.Title = *request.JournalProperties.Title
 			changed = true
 		}
 
 		if request.JournalProperties.PublicationDate != nil {
-			fmt.Printf("Changed \"PublicationDate\" from \"%s\" to \"%s\"\n", source.JournalProperties.PublicationDate, *request.JournalProperties.PublicationDate)
 			source.JournalProperties.PublicationDate = request.JournalProperties.PublicationDate
 			changed = true
 		}
 
 		if request.JournalProperties.PublicationPlace != nil {
-			fmt.Printf("Changed \"PublicationPlace\" from \"%s\" to \"%s\"\n", source.JournalProperties.PublicationPlace, *request.JournalProperties.PublicationPlace)
 			source.JournalProperties.PublicationPlace = *request.JournalProperties.PublicationPlace
 			changed = true
 		}
 
 		if request.JournalProperties.PagesFrom != nil {
-			fmt.Printf("Changed \"PagesFrom\" from \"%v\" to \"%v\"\n", source.JournalProperties.PagesFrom, *request.JournalProperties.PagesFrom)
 			source.JournalProperties.PagesFrom = *request.JournalProperties.PagesFrom
 			changed = true
 		}
 
 		if request.JournalProperties.PagesTo != nil {
-			fmt.Printf("Changed \"PagesTo\" from \"%v\" to \"%v\"\n", source.JournalProperties.PagesTo, *request.JournalProperties.PagesTo)
 			source.JournalProperties.PagesTo = *request.JournalProperties.PagesTo
 			changed = true
 		}
 
 		if request.JournalProperties.Edition != nil {
-			fmt.Printf("Changed \"Edition\" from \"%s\" to \"%s\"\n", source.JournalProperties.Edition, *request.JournalProperties.Edition)
 			source.JournalProperties.Edition = *request.JournalProperties.Edition
 			changed = true
 		}
 
 		if request.JournalProperties.Publisher != nil {
-			fmt.Printf("Changed \"Publisher\" from \"%s\" to \"%s\"\n", source.JournalProperties.Publisher, *request.JournalProperties.Publisher)
 			source.JournalProperties.Publisher = *request.JournalProperties.Publisher
 			changed = true
 		}
 
 		if request.JournalProperties.DOI != nil {
-			fmt.Printf("Changed \"DOI\" from \"%s\" to \"%s\"\n", source.JournalProperties.DOI, *request.JournalProperties.DOI)
 			source.JournalProperties.DOI = *request.JournalProperties.DOI
 			changed = true
 		}
 
 		if request.JournalProperties.JournalName != nil {
-			fmt.Printf("Changed \"JournalName\" from \"%s\" to \"%s\"\n", source.JournalProperties.JournalName, *request.JournalProperties.JournalName)
 			source.JournalProperties.JournalName = *request.JournalProperties.JournalName
 			changed = true
 		}
@@ -477,25 +457,21 @@ func ChangeSource(request *types.ChangeSourceRequest, userId string, validate *v
 		}
 
 		if request.WebProperties.URL != nil {
-			fmt.Printf("Changed \"URL\" from \"%s\" to \"%s\"\n", source.WebProperties.URL, *request.WebProperties.URL)
 			source.WebProperties.URL = *request.WebProperties.URL
 			changed = true
 		}
 
 		if request.WebProperties.WebsiteName != nil {
-			fmt.Printf("Changed \"WebsiteName\" from \"%s\" to \"%s\"\n", source.WebProperties.WebsiteName, *request.WebProperties.WebsiteName)
 			source.WebProperties.WebsiteName = *request.WebProperties.WebsiteName
 			changed = true
 		}
 
 		if request.WebProperties.AccessDate != nil {
-			fmt.Printf("Changed \"AccessDate\" from \"%s\" to \"%s\"\n", source.WebProperties.AccessDate, *request.WebProperties.AccessDate)
 			source.WebProperties.AccessDate = *request.WebProperties.AccessDate
 			changed = true
 		}
 
 		if request.WebProperties.PublicationDate != nil {
-			fmt.Printf("Changed \"PublicationDate\" from \"%s\" to \"%s\"\n", source.WebProperties.PublicationDate, *request.WebProperties.PublicationDate)
 			source.WebProperties.PublicationDate = request.WebProperties.PublicationDate
 			changed = true
 		}
