@@ -10,6 +10,20 @@ There are two workflows: **Development** and **Production**. The main difference
 3. You have [Go](https://go.dev/) installed.
 4. *(optional)* You may want to have [Insomnia](https://insomnia.rest/) installed to easily test requests. A template file, that can be imported into Insomnia, can be found inside the folder `misc`.
 
+# Common pitfalls
+1. Entering an URL in a `.env` file
+   
+      **Problem**: If you configure a `.env` file and need to enter a URL, then you need to remove the last slash at the end of the URL. Otherwise there can be wrong redirect or the authentication does not work.
+
+      **Solution**: Remove the last slash in the URL. For example, change `http://localhost:8080/` to `http://localhost:8080`
+
+2. Entering a password in a `.env` file
+
+      **Problem**: If you configure a `.env` file, need to enter a password (for example like in `ADMIN_SECRET`) and your password contains a "#" character, the "#" character and the characters after that will be interpreted as a comment.
+
+      **Solution**: Enclose your password with " characters. For example:
+      Change your current line: `ADMIN_SECRET=abc#123` to `ADMIN_SECRET="abc#123"`
+
 # Workflow for Development
 
 
